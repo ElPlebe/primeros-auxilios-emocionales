@@ -93,7 +93,18 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <PrimaryButton title="Realizar autoevaluación" onPress={() => router.push('/survey')} />
+      <PrimaryButton 
+        title="Realizar autoevaluación" 
+        style={{ backgroundColor: COLORS.secondary, marginTop: SIZES.base, marginVertical: 6 }}
+        onPress={() => router.push('/survey')} 
+        textStyle={{ color: COLORS.text }}
+      />
+      <PrimaryButton
+        title="Registrar emoción"
+        style={{ backgroundColor: COLORS.card, marginTop: SIZES.base, marginVertical: 6 }}
+        onPress={() => router.push('/(tabs)/daily-checkin')}
+        textStyle={{ color: COLORS.text }}
+      />
       <PrimaryButton
         title="Ver ejercicios"
         onPress={() => router.push('/exercises')}
@@ -117,7 +128,7 @@ export default function HomeScreen() {
       <PrimaryButton
         title="Ver estadísticas emocionales"
         onPress={() => router.push('../emotion-graph')}
-        style={{ backgroundColor: COLORS.secondary, marginTop: SIZES.base, marginVertical: 6 }}
+        style={{ backgroundColor: COLORS.card, marginTop: SIZES.base, marginVertical: 6 }}
         textStyle={{ color: COLORS.text }}
       />
 
@@ -200,5 +211,9 @@ const styles = StyleSheet.create({
   lastEmotionHighlight: {
     fontFamily: FONTS.bold,
     color: COLORS.primary
+  },
+  buttonContainer: {
+    flexDirection: 'column',
+    rowGap: 12 // mejora visual del espaciado entre botones
   }
 });
