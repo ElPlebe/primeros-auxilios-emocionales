@@ -58,13 +58,13 @@ export default function EmergencyScreen() {
       <PrimaryButton
         title="Hacer respiración guiada (video)"
         onPress={openYouTubeRelaxation}
-        style={{ backgroundColor: COLORS.info }}
+        style={{ backgroundColor: COLORS.primary, marginTop: SIZES.base, marginVertical: 6 }}
       />
 
       <PrimaryButton
         title="Ver guía de primeros auxilios"
         onPress={openPDFGuide}
-        style={{ backgroundColor: COLORS.primary }}
+        style={{ backgroundColor: COLORS.primary, marginTop: SIZES.base, marginVertical: 6 }}
       />
 
       <Text style={styles.footer}>
@@ -99,5 +99,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.textMuted,
     textAlign: 'center'
+  },
+  buttonContainer: {
+    flexDirection: 'column',
+    rowGap: 12 // mejora visual del espaciado entre botones
   }
 });
