@@ -31,7 +31,7 @@ export default function ExercisesScreen() {
           onPress={() => router.push('/exercises/escritura')}
         />
         <PrimaryButton
-          title="Escucha consciente (audio)"
+          title="Escucha consciente"
           onPress={() => router.push('/exercises/escucha')}
         />
         <PrimaryButton
