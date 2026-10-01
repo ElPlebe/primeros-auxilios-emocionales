@@ -38,3 +38,15 @@ export function getCrisisReasons(input: CrisisRoutingInput): CrisisReason[] {
 export function shouldRouteToCrisis(input: CrisisRoutingInput) {
   return getCrisisReasons(input).length > 0;
 }
+
+export function getCrisisRouteForSurvey(input: CrisisRoutingInput) {
+  return shouldRouteToCrisis(input) ? '/crisis' : null;
+}
+
+export function getCrisisRouteForResult(input: CrisisRoutingInput) {
+  return shouldRouteToCrisis(input) ? '/crisis' : null;
+}
+
+export function getCrisisRouteForExerciseFollowUp(input: CrisisRoutingInput) {
+  return shouldRouteToCrisis(input) ? '/crisis' : null;
+}

@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import EmotionMessage from '../../components/EmotionMessage';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { getCrisisRouteForResult } from '../../features/crisis/crisisRouting';
 import type { ExerciseId } from '../../utils/assessment';
 import {
   EXERCISE_LABELS,
@@ -46,6 +47,7 @@ export default function ResultsScreen() {
     ? parsedRecommendations
     : getExerciseRecommendations(level, primaryNeed);
   const { emotionType, emotionTitle, message } = RESULT_CONTENT[level];
+  const crisisRoute = getCrisisRouteForResult({ level, distressBefore });
 
   const openExercise = (exerciseId: ExerciseId) => {
     router.push({
@@ -84,6 +86,21 @@ export default function ResultsScreen() {
         Esta orientación no es un diagnóstico. Sirve para elegir un ejercicio breve y decidir si conviene buscar apoyo profesional.
       </Text>
 
+      {crisisRoute && (
+        <View style={styles.crisisBox}>
+          <Text style={styles.crisisTitle}>Prioriza apoyo inmediato</Text>
+          <Text style={styles.crisisText}>
+            Por la intensidad reportada, conviene revisar primero opciones de ayuda y contacto.
+          </Text>
+          <PrimaryButton
+            title="Abrir modo crisis"
+            onPress={() => router.push(crisisRoute)}
+            variant="danger"
+            style={styles.crisisButton}
+          />
+        </View>
+      )}
+
       <Text style={styles.subtitle}>Ejercicios sugeridos</Text>
       {recommendations.map((exerciseId) => (
         <PrimaryButton
@@ -95,10 +112,10 @@ export default function ResultsScreen() {
         />
       ))}
 
-      {level === 'severo' && (
+      {level === 'severo' && !crisisRoute && (
         <PrimaryButton
           title="Ver opciones de ayuda urgente"
-          onPress={() => router.push('/emergency')}
+          onPress={() => router.push('/crisis')}
           style={styles.emergencyButton}
         />
       )}
@@ -146,6 +163,30 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.textMuted,
     marginBottom: SIZES.padding
+  },
+  crisisBox: {
+    backgroundColor: '#FDECEA',
+    borderColor: COLORS.error,
+    borderRadius: SIZES.radius,
+    borderWidth: 1,
+    marginBottom: SIZES.padding,
+    padding: 14
+  },
+  crisisTitle: {
+    color: COLORS.error,
+    fontFamily: FONTS.bold,
+    fontSize: 17,
+    marginBottom: 4
+  },
+  crisisText: {
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: SIZES.base
+  },
+  crisisButton: {
+    marginTop: 0
   },
   subtitle: {
     fontSize: 18,

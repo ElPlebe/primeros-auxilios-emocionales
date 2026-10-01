@@ -53,7 +53,7 @@ export default function ConsentScreen() {
       />
       <PrimaryButton
         title="Necesito ayuda urgente"
-        onPress={() => router.replace('/emergency')}
+        onPress={() => router.replace('/crisis')}
         variant="danger"
         style={styles.urgentButton}
         accessibilityHint="Abre opciones de emergencia y apoyo inmediato."

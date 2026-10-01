@@ -11,6 +11,7 @@ import {
 import PrimaryButton from '../../components/PrimaryButton';
 import ValidationMessage from '../../components/ValidationMessage';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { getCrisisRouteForSurvey } from '../../features/crisis/crisisRouting';
 import type { Phq4Answer, SafetyAnswer, SupportNeed } from '../../utils/assessment';
 import {
   DISTRESS_OPTIONS,
@@ -48,8 +49,10 @@ export default function SurveyScreen() {
       return;
     }
 
-    if (hasEmergencyRisk(safetyAnswer)) {
-      router.replace('/emergency');
+    const crisisRoute = getCrisisRouteForSurvey({ safetyAnswer });
+
+    if (crisisRoute) {
+      router.replace(crisisRoute);
       return;
     }
 
@@ -136,7 +139,7 @@ export default function SurveyScreen() {
                 </Text>
                 <PrimaryButton
                   title="Ir a ayuda urgente"
-                  onPress={() => router.replace('/emergency')}
+                  onPress={() => router.replace('/crisis')}
                   variant="danger"
                   style={styles.emergencyButton}
                   accessibilityHint="Abre opciones de ayuda urgente."

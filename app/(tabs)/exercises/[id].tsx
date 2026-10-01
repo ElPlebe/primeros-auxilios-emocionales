@@ -14,6 +14,7 @@ import {
 import PrimaryButton from '../../../components/PrimaryButton';
 import ValidationMessage from '../../../components/ValidationMessage';
 import { COLORS, FONTS, SIZES } from '../../../constants/theme';
+import { getCrisisRouteForExerciseFollowUp } from '../../../features/crisis/crisisRouting';
 import type { ExerciseId, HelpfulRating } from '../../../utils/assessment';
 import {
   DISTRESS_OPTIONS,
@@ -226,6 +227,12 @@ export default function ExerciseDetailScreen() {
   const distressDelta = distressBeforeValue !== null && distressAfterValue !== null
     ? getDistressDelta(distressBeforeValue, distressAfterValue)
     : null;
+  const crisisRoute = distressBeforeValue !== null && distressAfterValue !== null
+    ? getCrisisRouteForExerciseFollowUp({
+        distressBefore: distressBeforeValue,
+        distressAfter: distressAfterValue
+      })
+    : null;
 
   const playAudio = async () => {
     try {
@@ -273,7 +280,7 @@ export default function ExerciseDetailScreen() {
       return;
     }
 
-    if (helpfulRating === null) {
+    if (helpfulRating === null && normalizedAssessmentLevel !== 'severo' && !crisisRoute) {
       Alert.alert('Falta tu opinión', 'Selecciona del 1 al 5 qué tanto te ayudó este ejercicio.');
       return;
     }
@@ -284,7 +291,7 @@ export default function ExerciseDetailScreen() {
         exerciseId,
         distressBefore: distressBeforeValue,
         distressAfter: distressAfterValue,
-        helpfulRating,
+        helpfulRating: helpfulRating ?? undefined,
         helpfulComment,
         assessmentLevel: normalizedAssessmentLevel
       }));
@@ -350,6 +357,20 @@ export default function ExerciseDetailScreen() {
 
             {distressDelta !== null && (
               <Text style={styles.deltaText}>{getChangeMessage(distressDelta)}</Text>
+            )}
+
+            {crisisRoute && (
+              <View style={styles.crisisBox}>
+                <Text style={styles.crisisText}>
+                  Si tu malestar subió, puede ayudarte contactar a alguien o revisar ayuda inmediata.
+                </Text>
+                <PrimaryButton
+                  title="Abrir modo crisis"
+                  onPress={() => router.push(crisisRoute)}
+                  variant="danger"
+                  style={styles.crisisButton}
+                />
+              </View>
             )}
           </View>
 
@@ -530,6 +551,24 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     fontSize: 14,
     marginTop: SIZES.base * 1.5
+  },
+  crisisBox: {
+    backgroundColor: '#FDECEA',
+    borderColor: COLORS.error,
+    borderRadius: SIZES.radius,
+    borderWidth: 1,
+    marginTop: SIZES.base * 1.5,
+    padding: 12
+  },
+  crisisText: {
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: SIZES.base
+  },
+  crisisButton: {
+    marginTop: 0
   },
   stepsTitle: {
     fontSize: 18,

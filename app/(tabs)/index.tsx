@@ -72,7 +72,7 @@ export default function HomeScreen() {
 
       <PrimaryButton
         title="Necesito ayuda urgente"
-        onPress={() => router.push('../emergency')}
+        onPress={() => router.push('/crisis')}
         variant="danger"
         style={styles.urgentButton}
         accessibilityHint="Abre opciones para llamar a emergencias o buscar apoyo inmediato."

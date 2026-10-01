@@ -68,3 +68,13 @@ test('defines Mexico crisis resources and advisor-reviewable copy', () => {
   assert.match(copy.CRISIS_COPY.actions.callEmergency, /911/);
   assert.match(copy.CRISIS_COPY.actions.callLifeLine, /Linea de la Vida/);
 });
+
+test('returns crisis route targets for high-risk screen flows', () => {
+  assert.equal(routing.getCrisisRouteForSurvey({ safetyAnswer: 'unsure' }), '/crisis');
+  assert.equal(routing.getCrisisRouteForSurvey({ safetyAnswer: 'safe', distressBefore: 4 }), null);
+  assert.equal(routing.getCrisisRouteForResult({ level: 'severo', distressBefore: 8 }), '/crisis');
+  assert.equal(routing.getCrisisRouteForResult({ level: 'moderado', distressBefore: 9 }), '/crisis');
+  assert.equal(routing.getCrisisRouteForResult({ level: 'moderado', distressBefore: 7 }), null);
+  assert.equal(routing.getCrisisRouteForExerciseFollowUp({ distressBefore: 5, distressAfter: 7 }), '/crisis');
+  assert.equal(routing.getCrisisRouteForExerciseFollowUp({ distressBefore: 7, distressAfter: 5 }), null);
+});

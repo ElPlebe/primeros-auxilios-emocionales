@@ -48,7 +48,7 @@ export default function SafetyPlanScreen() {
         </Text>
         <PrimaryButton
           title="Llamar o ver ayuda urgente"
-          onPress={() => router.push('../emergency')}
+          onPress={() => router.push('/crisis')}
           variant="danger"
           accessibilityHint="Abre la pantalla con opciones de emergencia y líneas de apoyo."
         />
