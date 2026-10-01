@@ -6,6 +6,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { CRISIS_COPY } from '../../features/crisis/crisisCopy';
 import { MEXICO_CRISIS_RESOURCES } from '../../features/crisis/crisisResources';
+import { normalizeMexicoPhoneForLinks } from '../../utils/phone';
 
 export default function CrisisScreen() {
   const router = useRouter();
@@ -43,7 +44,9 @@ export default function CrisisScreen() {
       return;
     }
 
-    void openUrl(`tel:${trustedPhone}`, `Intenta llamar a ${trustedName || 'tu contacto de confianza'} manualmente.`);
+    const normalized = normalizeMexicoPhoneForLinks(trustedPhone);
+    const phoneUrl = normalized ? `tel:${normalized.dialPhone}` : `tel:${trustedPhone}`;
+    void openUrl(phoneUrl, `Intenta llamar a ${trustedName || 'tu contacto de confianza'} manualmente.`);
   };
 
   const messageTrustedContact = () => {
@@ -52,9 +55,10 @@ export default function CrisisScreen() {
       return;
     }
 
-    const name = trustedName || 'estoy pasando por un momento dificil';
-    const text = encodeURIComponent(`Hola ${name}, necesito hablar contigo. Estoy pasando por un momento dificil.`);
-    void openUrl(`https://wa.me/${trustedPhone}?text=${text}`, 'Intenta escribir a tu contacto de confianza manualmente.');
+    const normalized = normalizeMexicoPhoneForLinks(trustedPhone);
+    const whatsappPhone = normalized?.whatsappPhone ?? trustedPhone.replace(/\D/g, '');
+    const text = encodeURIComponent('Hola, necesito hablar contigo. Estoy pasando por un momento dificil.');
+    void openUrl(`https://wa.me/${whatsappPhone}?text=${text}`, 'Intenta escribir a tu contacto de confianza manualmente.');
   };
 
   return (
@@ -117,7 +121,15 @@ export default function CrisisScreen() {
 
       <PrimaryButton
         title={CRISIS_COPY.actions.grounding}
-        onPress={() => router.push('/exercises/grounding')}
+        onPress={() =>
+          router.push({
+            pathname: '/exercises/[id]',
+            params: {
+              id: 'grounding',
+              source: 'crisis'
+            }
+          })
+        }
         variant="secondary"
         style={styles.spacedButton}
       />

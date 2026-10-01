@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { normalizeMexicoPhoneForLinks } from '../../utils/phone';
 
 export default function TrustedContactScreen() {
   const [name, setName] = useState('');
@@ -24,22 +25,22 @@ export default function TrustedContactScreen() {
       return;
     }
 
-    const phoneRegex = /^[0-9]{10,15}$/;
-    if (!phoneRegex.test(phone)) {
-      Alert.alert('Teléfono inválido', 'Ingresa un número válido (10-15 dígitos, sin espacios ni símbolos).');
+    const normalizedPhone = normalizeMexicoPhoneForLinks(phone);
+    if (!normalizedPhone) {
+      Alert.alert('Teléfono inválido', 'Ingresa un número mexicano válido de 10 dígitos o con clave +52.');
       return;
     }
 
     try {
       await AsyncStorage.setItem('trustedName', name);
-      await AsyncStorage.setItem('trustedPhone', phone);
+      await AsyncStorage.setItem('trustedPhone', normalizedPhone.dialPhone);
       Alert.alert('Guardado', 'Tu contacto ha sido guardado con éxito.');
     } catch {
       Alert.alert('Error', 'No se pudo guardar el contacto.');
     }
   };
 
-  const callContact = () => Linking.openURL(`tel:${phone}`);
+  const callContact = () => Linking.openURL(`tel:${normalizeMexicoPhoneForLinks(phone)?.dialPhone ?? phone}`);
 
   const confirmCall = () => {
     Alert.alert(`¿Llamar a ${name}?`, `Se iniciará una llamada al número ${phone}.`, [
@@ -49,8 +50,9 @@ export default function TrustedContactScreen() {
   };
 
   const messageContact = () => {
+    const normalizedPhone = normalizeMexicoPhoneForLinks(phone);
     const text = encodeURIComponent(`Hola ${name}, necesito hablar contigo. Estoy pasando por un momento difícil.`);
-    Linking.openURL(`https://wa.me/${phone}?text=${text}`);
+    Linking.openURL(`https://wa.me/${normalizedPhone?.whatsappPhone ?? phone.replace(/\D/g, '')}?text=${text}`);
   };
 
   const clearContact = async () => {
@@ -80,7 +82,7 @@ export default function TrustedContactScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Teléfono (solo números)"
+        placeholder="Teléfono mexicano o +52"
         placeholderTextColor={COLORS.textMuted}
         keyboardType="phone-pad"
         value={phone}

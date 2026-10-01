@@ -40,6 +40,13 @@ export interface ExerciseFollowUpInput {
   assessmentLevel?: DistressLevel;
 }
 
+export interface HelpfulRatingRequirementInput {
+  assessmentLevel?: DistressLevel;
+  source?: string | null;
+  distressBefore: number;
+  distressAfter: number;
+}
+
 export interface ExerciseFollowUp extends ExerciseFollowUpInput {
   delta: number;
   createdAt: string;
@@ -299,4 +306,10 @@ export function buildExerciseFollowUp(input: ExerciseFollowUpInput): ExerciseFol
     delta: getDistressDelta(distressBefore, distressAfter),
     createdAt: new Date().toISOString()
   };
+}
+
+export function shouldRequireHelpfulRating(input: HelpfulRatingRequirementInput) {
+  if (input.assessmentLevel === 'severo') return false;
+  if (input.source === 'crisis') return false;
+  return input.distressAfter <= input.distressBefore;
 }

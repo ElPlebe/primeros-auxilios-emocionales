@@ -113,6 +113,42 @@ test('stores post-exercise helpfulness feedback in follow-up records', () => {
   );
 });
 
+test('does not require helpfulness rating for severe or crisis-origin exercise follow-up', () => {
+  assert.equal(
+    assessment.shouldRequireHelpfulRating({
+      assessmentLevel: 'moderado',
+      source: 'crisis',
+      distressBefore: 7,
+      distressAfter: 5
+    }),
+    false
+  );
+  assert.equal(
+    assessment.shouldRequireHelpfulRating({
+      assessmentLevel: 'severo',
+      distressBefore: 7,
+      distressAfter: 5
+    }),
+    false
+  );
+  assert.equal(
+    assessment.shouldRequireHelpfulRating({
+      assessmentLevel: 'moderado',
+      distressBefore: 5,
+      distressAfter: 7
+    }),
+    false
+  );
+  assert.equal(
+    assessment.shouldRequireHelpfulRating({
+      assessmentLevel: 'moderado',
+      distressBefore: 7,
+      distressAfter: 5
+    }),
+    true
+  );
+});
+
 test('defines the required psychoeducation sections for the MVP', () => {
   const sectionIds = psychoeducation.PSYCHOEDUCATION_SECTIONS.map((section) => section.id);
 

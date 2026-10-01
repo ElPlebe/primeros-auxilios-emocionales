@@ -23,7 +23,8 @@ import {
   getDistressDelta,
   isExerciseId,
   normalizeDistressLevel,
-  normalizeDistressValue
+  normalizeDistressValue,
+  shouldRequireHelpfulRating
 } from '../../../utils/assessment';
 import { saveCompletedExercise, saveExerciseFollowUp } from '../../../utils/storage';
 
@@ -208,7 +209,7 @@ const getChangeMessage = (delta: number) => {
 };
 
 export default function ExerciseDetailScreen() {
-  const { id, distressBefore, assessmentLevel } = useLocalSearchParams();
+  const { id, distressBefore, assessmentLevel, source } = useLocalSearchParams();
   const router = useRouter();
   const [completed, setCompleted] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -224,6 +225,7 @@ export default function ExerciseDetailScreen() {
   const content = isExerciseId(exerciseId) ? exerciseData[exerciseId] : null;
   const assessmentLevelParam = firstParam(assessmentLevel);
   const normalizedAssessmentLevel = assessmentLevelParam ? normalizeDistressLevel(assessmentLevelParam) : undefined;
+  const sourceParam = firstParam(source);
   const distressDelta = distressBeforeValue !== null && distressAfterValue !== null
     ? getDistressDelta(distressBeforeValue, distressAfterValue)
     : null;
@@ -280,7 +282,15 @@ export default function ExerciseDetailScreen() {
       return;
     }
 
-    if (helpfulRating === null && normalizedAssessmentLevel !== 'severo' && !crisisRoute) {
+    if (
+      helpfulRating === null &&
+      shouldRequireHelpfulRating({
+        assessmentLevel: normalizedAssessmentLevel,
+        source: sourceParam,
+        distressBefore: distressBeforeValue,
+        distressAfter: distressAfterValue
+      })
+    ) {
       Alert.alert('Falta tu opinión', 'Selecciona del 1 al 5 qué tanto te ayudó este ejercicio.');
       return;
     }
