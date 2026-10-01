@@ -5,8 +5,11 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { getEmotionDisplayLabel, getEmotionValue } from '../../utils/emotionScale';
+import { parseJsonArray } from '../../utils/localJson';
 import { HOME_DISCLAIMER } from '../../utils/psychoeducation';
 import { hasAcceptedConsent } from '../../utils/storage';
+
+type StoredEmotionLog = { date: string; emotion: string };
 
 const getLabel = (value: number) => {
   if (value >= 4.5) return 'Muy positivo';
@@ -37,19 +40,19 @@ export default function HomeScreen() {
       }
 
       const stored = await AsyncStorage.getItem('emotionHistory');
-      if (stored) {
-        const history = JSON.parse(stored);
+      const history = parseJsonArray<StoredEmotionLog>(stored);
+      if (history.length > 0) {
         if (history.length >= 1) {
           setLastEmotion(history[0].emotion);
         }
         if (history.length >= 3) {
           const sum = history.reduce(
-            (acc: number, cur: { date: string; emotion: string }) => acc + getEmotionValue(cur.emotion),
+            (acc: number, cur) => acc + getEmotionValue(cur.emotion),
             0
           );
           setAvgEmotion(parseFloat((sum / history.length).toFixed(2)));
 
-          const lowDays = history.filter((e: { date: string; emotion: string }) => getEmotionValue(e.emotion) <= 2).length;
+          const lowDays = history.filter((e) => getEmotionValue(e.emotion) <= 2).length;
           setShowAlert(lowDays >= 3);
         }
       }

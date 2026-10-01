@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ExerciseFollowUp, SurveyAssessmentResult } from './assessment';
+import { parseJsonArray, parseJsonObject } from './localJson';
 import { createInitialSafetyPlanStatus } from './safetyPlan';
 import type { SafetyPlanStatus } from './safetyPlan';
 import type { StoredSurveyAssessment, WellnessData, WellnessEmotionLog } from './wellnessReport';
@@ -10,13 +11,6 @@ const EXERCISE_FOLLOW_UPS_KEY = 'exerciseFollowUps';
 const EMOTION_HISTORY_KEY = 'emotionHistory';
 const CONSENT_ACCEPTED_KEY = 'consentAcceptedAt';
 const SAFETY_PLAN_STATUS_KEY = 'safetyPlanStatus';
-
-const parseStoredArray = <T>(stored: string | null): T[] => {
-  if (!stored) return [];
-
-  const parsed = JSON.parse(stored);
-  return Array.isArray(parsed) ? parsed : [];
-};
 
 export const acceptConsent = async () => {
   await AsyncStorage.setItem(CONSENT_ACCEPTED_KEY, new Date().toISOString());
@@ -32,7 +26,10 @@ export const hasAcceptedConsent = async () => {
 export const getSafetyPlanStatus = async (): Promise<SafetyPlanStatus> => {
   try {
     const stored = await AsyncStorage.getItem(SAFETY_PLAN_STATUS_KEY);
-    return stored ? { ...createInitialSafetyPlanStatus(), ...JSON.parse(stored) } : createInitialSafetyPlanStatus();
+    return {
+      ...createInitialSafetyPlanStatus(),
+      ...parseJsonObject<SafetyPlanStatus>(stored, createInitialSafetyPlanStatus())
+    };
   } catch (error) {
     console.error('Error leyendo plan de seguridad:', error);
     return createInitialSafetyPlanStatus();
@@ -46,7 +43,7 @@ export const saveSafetyPlanStatus = async (status: SafetyPlanStatus) => {
 export const saveCompletedExercise = async (exerciseId: string) => {
   try {
     const existing = await AsyncStorage.getItem(COMPLETED_EXERCISES_KEY);
-    const parsed = parseStoredArray<string>(existing);
+    const parsed = parseJsonArray<string>(existing);
     if (!parsed.includes(exerciseId)) {
       parsed.push(exerciseId);
       await AsyncStorage.setItem(COMPLETED_EXERCISES_KEY, JSON.stringify(parsed));
@@ -60,7 +57,7 @@ export const saveCompletedExercise = async (exerciseId: string) => {
 export const getCompletedExercises = async (): Promise<string[]> => {
   try {
     const stored = await AsyncStorage.getItem(COMPLETED_EXERCISES_KEY);
-    return parseStoredArray<string>(stored);
+    return parseJsonArray<string>(stored);
   } catch (error) {
     console.error('Error leyendo ejercicios completados:', error);
     return [];
@@ -70,7 +67,7 @@ export const getCompletedExercises = async (): Promise<string[]> => {
 export const saveSurveyAssessment = async (assessment: SurveyAssessmentResult) => {
   try {
     const existing = await AsyncStorage.getItem(SURVEY_ASSESSMENTS_KEY);
-    const parsed = parseStoredArray<StoredSurveyAssessment>(existing);
+    const parsed = parseJsonArray<StoredSurveyAssessment>(existing);
     const next = [{ ...assessment, createdAt: new Date().toISOString() }, ...parsed].slice(0, 50);
 
     await AsyncStorage.setItem(SURVEY_ASSESSMENTS_KEY, JSON.stringify(next));
@@ -83,7 +80,7 @@ export const saveSurveyAssessment = async (assessment: SurveyAssessmentResult) =
 export const getSurveyAssessments = async (): Promise<StoredSurveyAssessment[]> => {
   try {
     const stored = await AsyncStorage.getItem(SURVEY_ASSESSMENTS_KEY);
-    return parseStoredArray<StoredSurveyAssessment>(stored);
+    return parseJsonArray<StoredSurveyAssessment>(stored);
   } catch (error) {
     console.error('Error leyendo evaluaciones:', error);
     return [];
@@ -93,7 +90,7 @@ export const getSurveyAssessments = async (): Promise<StoredSurveyAssessment[]> 
 export const saveExerciseFollowUp = async (followUp: ExerciseFollowUp) => {
   try {
     const existing = await AsyncStorage.getItem(EXERCISE_FOLLOW_UPS_KEY);
-    const parsed = parseStoredArray<ExerciseFollowUp>(existing);
+    const parsed = parseJsonArray<ExerciseFollowUp>(existing);
     const next = [followUp, ...parsed].slice(0, 100);
 
     await AsyncStorage.setItem(EXERCISE_FOLLOW_UPS_KEY, JSON.stringify(next));
@@ -106,7 +103,7 @@ export const saveExerciseFollowUp = async (followUp: ExerciseFollowUp) => {
 export const getExerciseFollowUps = async (): Promise<ExerciseFollowUp[]> => {
   try {
     const stored = await AsyncStorage.getItem(EXERCISE_FOLLOW_UPS_KEY);
-    return parseStoredArray<ExerciseFollowUp>(stored);
+    return parseJsonArray<ExerciseFollowUp>(stored);
   } catch (error) {
     console.error('Error leyendo seguimiento:', error);
     return [];
@@ -122,7 +119,7 @@ export const getStoredWellnessData = async (): Promise<WellnessData> => {
   ]);
 
   return {
-    emotionHistory: parseStoredArray<WellnessEmotionLog>(emotionHistory),
+    emotionHistory: parseJsonArray<WellnessEmotionLog>(emotionHistory),
     completedExercises,
     surveyAssessments,
     exerciseFollowUps

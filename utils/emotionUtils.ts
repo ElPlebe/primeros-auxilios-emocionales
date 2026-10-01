@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJsonArray } from './localJson';
 
 export interface EmotionLog {
   date: string;
@@ -8,7 +9,7 @@ export interface EmotionLog {
 export const saveEmotion = async (newEntry: EmotionLog): Promise<void> => {
   try {
     const stored = await AsyncStorage.getItem('emotionHistory');
-    const history: EmotionLog[] = stored ? JSON.parse(stored) : [];
+    const history = parseJsonArray<EmotionLog>(stored);
     const updated = [newEntry, ...history.filter(e => e.date !== newEntry.date)];
     await AsyncStorage.setItem('emotionHistory', JSON.stringify(updated));
   } catch (error) {
@@ -20,7 +21,7 @@ export const saveEmotion = async (newEntry: EmotionLog): Promise<void> => {
 export const getEmotionHistory = async (): Promise<EmotionLog[]> => {
   try {
     const stored = await AsyncStorage.getItem('emotionHistory');
-    const parsed: EmotionLog[] = stored ? JSON.parse(stored) : [];
+    const parsed = parseJsonArray<EmotionLog>(stored);
     return parsed.sort((a, b) => (a.date < b.date ? 1 : -1));
   } catch (error) {
     console.error('Error loading emotion history:', error);

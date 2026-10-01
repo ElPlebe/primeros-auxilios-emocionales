@@ -15,9 +15,10 @@ const exerciseTitles: Record<string, string> = {
   respiracion: 'Respiración guiada',
   grounding: 'Grounding 5-4-3-2-1',
   afirmaciones: 'Afirmaciones positivas',
-  journaling: 'Escritura emocional',
-  audio: 'Escucha consciente',
-  ayuda: 'Contacto con ayuda urgente'
+  escritura: 'Escritura emocional',
+  escucha: 'Escucha consciente',
+  ayuda: 'Contacto con ayuda urgente',
+  afirmacionesAnsiedad: 'Afirmaciones para ansiedad'
 };
 
 export default function ProfileScreen() {
