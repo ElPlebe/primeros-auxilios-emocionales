@@ -1,48 +1,65 @@
-
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import EmotionMessage from '../../components/EmotionMessage';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import type { ExerciseId } from '../../utils/assessment';
+import {
+  EXERCISE_LABELS,
+  RESULT_CONTENT,
+  getExerciseRecommendations,
+  isExerciseId,
+  normalizeDistressLevel,
+  normalizeDistressValue,
+  normalizeSupportNeed
+} from '../../utils/assessment';
+
+const firstParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+const parseRecommendations = (value: string | string[] | undefined): ExerciseId[] => {
+  const rawValue = firstParam(value);
+
+  if (!rawValue) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed) ? parsed.filter(isExerciseId) : [];
+  } catch {
+    return [];
+  }
+};
 
 export default function ResultsScreen() {
-  const scheme = useColorScheme(); // 'light' | 'dark'
-  const isDarkMode = scheme === 'dark';
-
-  const { level } = useLocalSearchParams();
+  const params = useLocalSearchParams();
   const router = useRouter();
 
-  const getContent = (level: string | string[] | undefined) => {
-    switch (level) {
-      case 'leve':
-        return {
-          emotionType: 'low' as const,
-          emotionTitle: 'Estás bien por ahora',
-          message: 'Parece que hoy estás emocionalmente estable. ¡Qué bueno saberlo!',
-          exercises: ['Respiración consciente', 'Afirmaciones positivas']
-        };
-      case 'moderado':
-        return {
-          emotionType: 'moderate' as const,
-          emotionTitle: 'Te estás cuidando',
-          message: 'Sabemos que no siempre es fácil. Estás haciendo lo correcto al cuidarte.',
-          exercises: ['Grounding 5-4-3-2-1', 'Escritura emocional']
-        };
-      case 'grave':
-      default:
-        return {
-          emotionType: 'high' as const,
-          emotionTitle: 'No estás solo/a',
-          message: 'Estás pasando por algo difícil. El hecho de que estés aquí ya es un paso importante.',
-          exercises: ['Respiración guiada', 'Escucha consciente', 'Ayuda urgente']
-        };
-    }
+  const level = normalizeDistressLevel(firstParam(params.level));
+  const primaryNeed = normalizeSupportNeed(firstParam(params.primaryNeed)) ?? 'calma';
+  const distressBefore = normalizeDistressValue(firstParam(params.distressBefore));
+  const phq4Score = firstParam(params.phq4Score);
+  const anxietyScore = firstParam(params.anxietyScore);
+  const depressionScore = firstParam(params.depressionScore);
+  const parsedRecommendations = parseRecommendations(params.recommendedExerciseIds);
+  const recommendations = parsedRecommendations.length > 0
+    ? parsedRecommendations
+    : getExerciseRecommendations(level, primaryNeed);
+  const { emotionType, emotionTitle, message } = RESULT_CONTENT[level];
+
+  const openExercise = (exerciseId: ExerciseId) => {
+    router.push({
+      pathname: '/exercises/[id]',
+      params: {
+        id: exerciseId,
+        distressBefore: distressBefore === null ? undefined : String(distressBefore),
+        assessmentLevel: level
+      }
+    });
   };
 
-  const { emotionType, emotionTitle, message, exercises } = getContent(level);
-
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.screenTitle}>Resultado emocional</Text>
 
       <EmotionMessage
@@ -51,20 +68,52 @@ export default function ResultsScreen() {
         type={emotionType}
       />
 
-      <Text style={styles.subtitle}>Te sugerimos estos ejercicios:</Text>
-      {exercises.map((e, idx) => (
-        <Text key={idx} style={styles.exercise}>• {e}</Text>
+      <View style={styles.summaryBox}>
+        <Text style={styles.summaryText}>
+          Tamizaje PHQ-4: {phq4Score ?? 'sin dato'} / 12
+        </Text>
+        <Text style={styles.summaryText}>
+          Ansiedad: {anxietyScore ?? 'sin dato'} / 6 · Depresión: {depressionScore ?? 'sin dato'} / 6
+        </Text>
+        <Text style={styles.summaryText}>
+          Malestar actual: {distressBefore ?? 'sin dato'} / 10
+        </Text>
+      </View>
+
+      <Text style={styles.disclaimer}>
+        Esta orientación no es un diagnóstico. Sirve para elegir un ejercicio breve y decidir si conviene buscar apoyo profesional.
+      </Text>
+
+      <Text style={styles.subtitle}>Ejercicios sugeridos</Text>
+      {recommendations.map((exerciseId) => (
+        <PrimaryButton
+          key={exerciseId}
+          title={EXERCISE_LABELS[exerciseId]}
+          onPress={() => openExercise(exerciseId)}
+          style={exerciseId === 'ayuda' ? styles.urgentExerciseButton : styles.exerciseButton}
+          textStyle={exerciseId === 'ayuda' ? undefined : styles.exerciseButtonText}
+        />
       ))}
 
+      {level === 'severo' && (
+        <PrimaryButton
+          title="Ver opciones de ayuda urgente"
+          onPress={() => router.push('/emergency')}
+          style={styles.emergencyButton}
+        />
+      )}
+
       <PrimaryButton
-        title="Ver ejercicios"
+        title="Ver todos los ejercicios"
         onPress={() => router.push('/exercises')}
+        style={styles.secondaryButton}
+        textStyle={styles.secondaryButtonText}
       />
 
       <TouchableOpacity style={styles.linkButton} onPress={() => router.replace('/')}>
         <Text style={styles.linkText}>Volver al inicio</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -72,7 +121,7 @@ const styles = StyleSheet.create({
   container: {
     padding: SIZES.padding,
     backgroundColor: COLORS.background,
-    flex: 1
+    flexGrow: 1
   },
   screenTitle: {
     fontSize: 22,
@@ -80,17 +129,54 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: SIZES.base
   },
+  summaryBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: SIZES.radius,
+    padding: 14,
+    marginBottom: SIZES.base * 2
+  },
+  summaryText: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.text,
+    marginBottom: 4
+  },
+  disclaimer: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.textMuted,
+    marginBottom: SIZES.padding
+  },
   subtitle: {
     fontSize: 18,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: SIZES.base
   },
-  exercise: {
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: COLORS.text,
-    marginBottom: 6
+  exerciseButton: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    marginBottom: SIZES.base
+  },
+  exerciseButtonText: {
+    color: COLORS.text
+  },
+  urgentExerciseButton: {
+    backgroundColor: COLORS.error,
+    marginBottom: SIZES.base
+  },
+  emergencyButton: {
+    backgroundColor: COLORS.error,
+    marginTop: SIZES.base,
+    marginBottom: SIZES.base
+  },
+  secondaryButton: {
+    backgroundColor: COLORS.secondary,
+    marginTop: SIZES.base
+  },
+  secondaryButtonText: {
+    color: COLORS.text
   },
   linkButton: {
     marginTop: SIZES.base * 2,

@@ -35,5 +35,11 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+.assessment-test-dist/
+
+# generated presentation QA artifacts
+presentation-build/
+*.pptx.inspect.ndjson
+Presentacion_Armonia_de_Vida_Primeros_Auxilios_Emocionales/
 
 app-example

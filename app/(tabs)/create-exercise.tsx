@@ -50,7 +50,7 @@ export default function CreateCustomExerciseScreen() {
       setTitle('');
       setDescription('');
       setSteps(['']);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'No se pudo guardar el ejercicio.');
     }
   };

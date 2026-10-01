@@ -1,31 +1,41 @@
 import { useRouter } from 'expo-router';
-import { Linking, ScrollView, StyleSheet, Text, useColorScheme } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import EmotionMessage from '../../components/EmotionMessage';
 import PrimaryButton from '../../components/PrimaryButton';
+import { CARD_STYLES, SPACING, TYPOGRAPHY } from '../../constants/design';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 
 export default function EmergencyScreen() {
-  const scheme = useColorScheme(); // 'light' | 'dark'
-  const isDarkMode = scheme === 'dark';
-
   const router = useRouter();
 
-  const callHelpLine = () => {
-    Linking.openURL('tel:8009112000'); // Línea de la Vida - México
+  const openUrl = async (url: string, fallbackMessage: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('No se pudo abrir', fallbackMessage);
+    }
   };
 
-  const sendWhatsAppMessage = () => {
-    const message = encodeURIComponent("Hola, necesito hablar con alguien. Estoy pasando por un momento difícil.");
-    const phone = "525500000000"; // Cambiar por número real con código de país
-    Linking.openURL(`https://wa.me/${phone}?text=${message}`);
+  const callEmergencyServices = () => {
+    void openUrl('tel:911', 'Si hay peligro inmediato, marca 911 desde tu teléfono.');
   };
 
-  const openYouTubeRelaxation = () => {
-    Linking.openURL('https://www.youtube.com/watch?v=inpok4MKVLM'); // Video de respiración guiada (The Honest Guys)
+  const callLifeLine = () => {
+    void openUrl('tel:+528009112000', 'Puedes llamar a Línea de la Vida al 800 911 2000.');
+  };
+
+  const openOfficialLifeLine = () => {
+    void openUrl(
+      'https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000',
+      'Busca "Línea de la Vida 800 911 2000" en el sitio oficial de gob.mx.'
+    );
   };
 
   const openPDFGuide = () => {
-    Linking.openURL('https://www.who.int/publications/i/item/9789240030787'); // Guía OMS primeros auxilios psicológicos
+    void openUrl(
+      'https://www.who.int/es/publications/i/item/9789241548205',
+      'Busca "Primera ayuda psicológica guía para trabajadores de campo OMS".'
+    );
   };
 
   return (
@@ -33,42 +43,65 @@ export default function EmergencyScreen() {
       <Text style={styles.title}>Ayuda urgente</Text>
 
       <EmotionMessage
-        title="No estás solo/a"
-        message="Sabemos que este momento puede ser abrumador. Respira. Aquí tienes algunas opciones para recibir ayuda inmediata."
+        title="Tu seguridad va primero"
+        message="Si estás en peligro inmediato o sientes que podrías hacerte daño, contacta servicios de emergencia o busca a una persona que pueda acompañarte ahora."
         type="high"
       />
 
-      <PrimaryButton title="Llamar a la línea de ayuda" onPress={callHelpLine} />
+      <PrimaryButton
+        title="Llamar a emergencias 911"
+        onPress={callEmergencyServices}
+        variant="danger"
+        accessibilityHint="Inicia una llamada al número de emergencias 911."
+      />
 
       <PrimaryButton
-        title="Enviar mensaje por WhatsApp"
-        onPress={sendWhatsAppMessage}
-        style={{ backgroundColor: '#25D366', marginTop: SIZES.base }}
+        title="Llamar a Línea de la Vida"
+        onPress={callLifeLine}
+        accessibilityHint="Inicia una llamada a Línea de la Vida al 800 911 2000."
+        style={{ marginTop: SIZES.base }}
       />
 
       <PrimaryButton
         title="Contactar a persona de confianza"
         onPress={() => router.push('../trusted-contact')}
-        style={{ backgroundColor: COLORS.secondary, marginTop: SIZES.base }}
-        textStyle={{ color: COLORS.text }}
+        variant="secondary"
+        accessibilityHint="Abre tu contacto de confianza guardado."
+        style={{ marginTop: SIZES.base }}
       />
 
-      <Text style={styles.subtitle}>También puedes intentar:</Text>
+      <Text style={styles.subtitle}>Si no estás en peligro inmediato</Text>
+
+      <View style={styles.safetyPlanCard}>
+        <Text style={styles.cardTitle}>Organizar un plan breve</Text>
+        <Text style={styles.cardText}>
+          Si puedes continuar unos minutos, revisa cuatro pasos simples: lugar seguro, contacto disponible,
+          contacto de confianza y ayuda urgente.
+        </Text>
+        <PrimaryButton
+          title="Abrir plan de seguridad breve"
+          onPress={() => router.push('../safety-plan')}
+          variant="secondary"
+          accessibilityHint="Abre una guía breve para organizar pasos de seguridad."
+        />
+      </View>
 
       <PrimaryButton
-        title="Hacer respiración guiada (video)"
-        onPress={openYouTubeRelaxation}
-        style={{ backgroundColor: COLORS.primary, marginTop: SIZES.base, marginVertical: 6 }}
+        title="Ver sitio oficial de Línea de la Vida"
+        onPress={openOfficialLifeLine}
+        variant="ghost"
+        style={{ marginTop: SIZES.base }}
       />
 
       <PrimaryButton
-        title="Ver guía de primeros auxilios"
+        title="Ver guía OMS de primeros auxilios"
         onPress={openPDFGuide}
-        style={{ backgroundColor: COLORS.primary, marginTop: SIZES.base, marginVertical: 6 }}
+        variant="ghost"
+        style={{ marginTop: SIZES.base }}
       />
 
       <Text style={styles.footer}>
-        Si estás en riesgo inminente, acude a urgencias o contacta con alguien de confianza.
+        Esta app ofrece orientación inicial. No reemplaza atención médica, psicológica ni servicios de emergencia.
       </Text>
     </ScrollView>
   );
@@ -93,15 +126,23 @@ const styles = StyleSheet.create({
     marginTop: SIZES.padding,
     marginBottom: SIZES.base
   },
+  safetyPlanCard: {
+    ...CARD_STYLES.default,
+    marginBottom: SPACING.sm
+  },
+  cardTitle: {
+    ...TYPOGRAPHY.sectionTitle,
+    marginBottom: 6
+  },
+  cardText: {
+    ...TYPOGRAPHY.body,
+    marginBottom: SPACING.sm
+  },
   footer: {
     marginTop: SIZES.padding,
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: COLORS.textMuted,
     textAlign: 'center'
-  },
-  buttonContainer: {
-    flexDirection: 'column',
-    rowGap: 12 // mejora visual del espaciado entre botones
   }
 });

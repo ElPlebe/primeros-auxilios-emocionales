@@ -1,22 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-
-const emotionToValue: Record<string, number> = {
-  Bien: 5,
-  Tranquilo: 4,
-  Neutral: 3,
-  Ansioso: 2,
-  Triste: 1
-};
+import { getEmotionDisplayLabel, getEmotionValue } from '../../utils/emotionScale';
+import { HOME_DISCLAIMER } from '../../utils/psychoeducation';
+import { hasAcceptedConsent } from '../../utils/storage';
 
 const getLabel = (value: number) => {
   if (value >= 4.5) return 'Muy positivo';
   if (value >= 3.5) return 'Estable';
-  if (value >= 2.5) return 'Inestable';
+  if (value >= 2.5) return 'Variable';
   return 'Bajo';
 };
 
@@ -28,9 +23,6 @@ const getGreeting = () => {
 };
 
 export default function HomeScreen() {
-  const scheme = useColorScheme(); // 'light' | 'dark'
-  const isDarkMode = scheme === 'dark';
-
   const router = useRouter();
   const [avgEmotion, setAvgEmotion] = useState<number | null>(null);
   const [showAlert, setShowAlert] = useState(false);
@@ -38,6 +30,12 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const loadData = async () => {
+      const accepted = await hasAcceptedConsent();
+      if (!accepted) {
+        router.replace('../consent');
+        return;
+      }
+
       const stored = await AsyncStorage.getItem('emotionHistory');
       if (stored) {
         const history = JSON.parse(stored);
@@ -45,38 +43,63 @@ export default function HomeScreen() {
           setLastEmotion(history[0].emotion);
         }
         if (history.length >= 3) {
-          const sum = history.reduce((acc: number, cur: { date: string; emotion: string }) => acc + (emotionToValue[cur.emotion] || 0), 0);
+          const sum = history.reduce(
+            (acc: number, cur: { date: string; emotion: string }) => acc + getEmotionValue(cur.emotion),
+            0
+          );
           setAvgEmotion(parseFloat((sum / history.length).toFixed(2)));
 
-          const lowDays = history.filter((e: { date: string; emotion: string }) => emotionToValue[e.emotion] <= 2).length;
+          const lowDays = history.filter((e: { date: string; emotion: string }) => getEmotionValue(e.emotion) <= 2).length;
           setShowAlert(lowDays >= 3);
         }
       }
     };
 
     loadData();
-  }, []);
+  }, [router]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>{getGreeting()}, bienvenido</Text>
+      <Text style={styles.greeting}>{getGreeting()}</Text>
+      <Text style={styles.title}>¿Qué necesitas ahora?</Text>
+
+      <View style={styles.disclaimerBox}>
+        <Text style={styles.disclaimerText}>{HOME_DISCLAIMER}</Text>
+      </View>
+
+      <PrimaryButton
+        title="Necesito ayuda urgente"
+        onPress={() => router.push('../emergency')}
+        variant="danger"
+        style={styles.urgentButton}
+        accessibilityHint="Abre opciones para llamar a emergencias o buscar apoyo inmediato."
+      />
+
+      <PrimaryButton
+        title="Realizar autoevaluación"
+        style={styles.primaryAction}
+        onPress={() => router.push('/survey')}
+        accessibilityHint="Inicia una evaluación breve para orientar ejercicios de apoyo."
+      />
 
       {lastEmotion && (
         <View style={styles.lastEmotionBox}>
-          <Text style={styles.lastEmotionText}>Hoy registraste: <Text style={styles.lastEmotionHighlight}>{lastEmotion}</Text></Text>
+          <Text style={styles.lastEmotionText}>
+            Hoy registraste: <Text style={styles.lastEmotionHighlight}>{getEmotionDisplayLabel(lastEmotion)}</Text>
+          </Text>
         </View>
       )}
 
       {showAlert && (
         <View style={styles.alertBox}>
-          <Text style={styles.alertTitle}>¿Te has sentido bajoneado últimamente?</Text>
+          <Text style={styles.alertTitle}>Has tenido varios días difíciles</Text>
           <Text style={styles.alertText}>
-            Hemos notado varios días emocionalmente difíciles. ¿Te gustaría hacer una pausa con un ejercicio calmante?
+            Puede ayudarte hacer una pausa breve o contactar a alguien de confianza.
           </Text>
           <PrimaryButton
-            title="Hacer ejercicio ahora"
-            onPress={() => router.push('/exercises/respiracion')}
-            style={{ marginTop: 8 }}
+            title="Hacer grounding"
+            onPress={() => router.push('/exercises/grounding')}
+            style={{ marginTop: SIZES.base }}
           />
         </View>
       )}
@@ -85,57 +108,75 @@ export default function HomeScreen() {
         <View style={styles.summaryBox}>
           <Text style={styles.summaryTitle}>Resumen emocional</Text>
           <Text style={styles.summaryText}>
-            Tu promedio emocional reciente es {avgEmotion} – {getLabel(avgEmotion)}
+            Promedio reciente: {avgEmotion} · {getLabel(avgEmotion)}
           </Text>
           <TouchableOpacity onPress={() => router.push('../emotion-graph')}>
-            <Text style={styles.linkText}>Ver gráfico completo →</Text>
+            <Text style={styles.linkText}>Ver evolución emocional</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      <PrimaryButton 
-        title="Realizar autoevaluación" 
-        style={{ backgroundColor: COLORS.secondary, marginTop: SIZES.base, marginVertical: 6 }}
-        onPress={() => router.push('/survey')} 
-        textStyle={{ color: COLORS.text }}
-      />
-      <PrimaryButton
-        title="Registrar emoción"
-        style={{ backgroundColor: COLORS.card, marginTop: SIZES.base, marginVertical: 6 }}
-        onPress={() => router.push('/(tabs)/daily-checkin')}
-        textStyle={{ color: COLORS.text }}
-      />
-      <PrimaryButton
-        title="Ver ejercicios"
-        onPress={() => router.push('/exercises')}
-        style={{ backgroundColor: COLORS.secondary, marginTop: SIZES.base, marginVertical: 6 }}
-        textStyle={{ color: COLORS.text }}
-      />
-      <PrimaryButton
-        title="Ver historial emocional"
-        onPress={() => router.push('../profile')}
-        style={{ backgroundColor: COLORS.card, marginTop: SIZES.base, marginVertical: 6 }}
-        textStyle={{ color: COLORS.text }}
-      />
+      <Text style={styles.sectionTitle}>Apoyo rápido</Text>
+      <View style={styles.actionRow}>
+        <PrimaryButton
+          title="Ejercicios"
+          onPress={() => router.push('/exercises')}
+          variant="secondary"
+          style={styles.secondaryAction}
+          accessibilityHint="Abre la lista de ejercicios de regulación emocional."
+        />
+        <PrimaryButton
+          title="Registrar emoción"
+          variant="secondary"
+          style={styles.secondaryAction}
+          onPress={() => router.push('/(tabs)/daily-checkin')}
+          accessibilityHint="Abre el registro rápido de emociones."
+        />
+      </View>
 
+      <Text style={styles.sectionTitle}>Más opciones</Text>
+      <PrimaryButton
+        title="Plan de seguridad breve"
+        onPress={() => router.push('../safety-plan')}
+        variant="secondary"
+        style={styles.tertiaryAction}
+        accessibilityHint="Abre una guía breve de seguridad ante malestar intenso."
+      />
+      <PrimaryButton
+        title="Información y psicoeducación"
+        onPress={() => router.push('../info')}
+        variant="ghost"
+        style={styles.tertiaryAction}
+      />
+      <PrimaryButton
+        title="Privacidad y datos"
+        onPress={() => router.push('../privacy-data')}
+        variant="ghost"
+        style={styles.tertiaryAction}
+      />
+      <PrimaryButton
+        title="Resumen para tesis/clínica"
+        onPress={() => router.push('../summary')}
+        variant="ghost"
+        style={styles.tertiaryAction}
+      />
       <PrimaryButton
         title="Contacto de confianza"
         onPress={() => router.push('../trusted-contact')}
-        style={{ backgroundColor: COLORS.secondary, marginTop: SIZES.base, marginVertical: 6 }}
-        textStyle={{ color: COLORS.text }}
+        variant="ghost"
+        style={styles.tertiaryAction}
       />
-
       <PrimaryButton
-        title="Ver estadísticas emocionales"
+        title="Historial emocional"
+        onPress={() => router.push('../profile')}
+        variant="ghost"
+        style={styles.tertiaryAction}
+      />
+      <PrimaryButton
+        title="Estadísticas emocionales"
         onPress={() => router.push('../emotion-graph')}
-        style={{ backgroundColor: COLORS.card, marginTop: SIZES.base, marginVertical: 6 }}
-        textStyle={{ color: COLORS.text }}
-      />
-
-      <PrimaryButton
-        title="Necesito ayuda urgente"
-        onPress={() => router.push('../emergency')}
-        style={{ backgroundColor: '#e74c3c', marginTop: 24, marginVertical: 6 }}
+        variant="ghost"
+        style={styles.tertiaryAction}
       />
     </ScrollView>
   );
@@ -147,19 +188,80 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     flexGrow: 1
   },
+  greeting: {
+    fontSize: 18,
+    fontFamily: FONTS.regular,
+    color: COLORS.textMuted,
+    marginBottom: 2
+  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: SIZES.padding
   },
+  disclaimerBox: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    borderWidth: 1,
+    borderRadius: SIZES.radius,
+    padding: 14,
+    marginBottom: SIZES.base
+  },
+  disclaimerText: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.textMuted,
+    lineHeight: 20
+  },
+  urgentButton: {
+    marginBottom: SIZES.base
+  },
+  primaryAction: {
+    backgroundColor: COLORS.primary,
+    marginBottom: SIZES.padding
+  },
+  lastEmotionBox: {
+    backgroundColor: '#EAF6FF',
+    padding: 12,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.padding
+  },
+  lastEmotionText: {
+    fontSize: 15,
+    fontFamily: FONTS.regular,
+    color: COLORS.text
+  },
+  lastEmotionHighlight: {
+    fontFamily: FONTS.bold,
+    color: COLORS.primary
+  },
+  alertBox: {
+    backgroundColor: '#FDECEA',
+    borderLeftWidth: 5,
+    borderLeftColor: COLORS.error,
+    padding: SIZES.base * 2,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.padding
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+    color: COLORS.error,
+    marginBottom: 4
+  },
+  alertText: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.text
+  },
   summaryBox: {
     backgroundColor: '#F0F4F8',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: SIZES.radius,
     borderLeftWidth: 5,
     borderLeftColor: COLORS.primary,
-    marginBottom: SIZES.base * 2
+    marginBottom: SIZES.padding
   },
   summaryTitle: {
     fontFamily: FONTS.bold,
@@ -178,42 +280,21 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     marginTop: 8
   },
-  alertBox: {
-    backgroundColor: '#FDECEA',
-    borderLeftWidth: 5,
-    borderLeftColor: '#D9534F',
-    padding: SIZES.base * 2,
-    borderRadius: SIZES.radius,
-    marginBottom: SIZES.padding
-  },
-  alertTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontFamily: FONTS.bold,
-    color: '#D9534F',
-    marginBottom: 4
+    color: COLORS.text,
+    marginBottom: SIZES.base
   },
-  alertText: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: COLORS.text
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: SIZES.padding
   },
-  lastEmotionBox: {
-    backgroundColor: '#eaf6ff',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: SIZES.base * 2
+  secondaryAction: {
+    flex: 1
   },
-  lastEmotionText: {
-    fontSize: 15,
-    fontFamily: FONTS.regular,
-    color: COLORS.text
-  },
-  lastEmotionHighlight: {
-    fontFamily: FONTS.bold,
-    color: COLORS.primary
-  },
-  buttonContainer: {
-    flexDirection: 'column',
-    rowGap: 12 // mejora visual del espaciado entre botones
+  tertiaryAction: {
+    marginBottom: SIZES.base
   }
 });

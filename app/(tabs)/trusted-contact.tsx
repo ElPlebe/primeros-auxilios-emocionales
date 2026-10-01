@@ -34,7 +34,7 @@ export default function TrustedContactScreen() {
       await AsyncStorage.setItem('trustedName', name);
       await AsyncStorage.setItem('trustedPhone', phone);
       Alert.alert('Guardado', 'Tu contacto ha sido guardado con éxito.');
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'No se pudo guardar el contacto.');
     }
   };
