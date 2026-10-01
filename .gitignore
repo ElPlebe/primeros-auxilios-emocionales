@@ -37,6 +37,7 @@ yarn-error.*
 *.tsbuildinfo
 .assessment-test-dist/
 .local-json-test-dist/
+.crisis-routing-test-dist/
 
 # generated presentation QA artifacts
 presentation-build/
