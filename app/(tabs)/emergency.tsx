@@ -49,6 +49,14 @@ export default function EmergencyScreen() {
       />
 
       <PrimaryButton
+        title="Abrir modo crisis"
+        onPress={() => router.replace('/crisis')}
+        variant="danger"
+        accessibilityHint="Abre una pantalla simple con 911, Linea de la Vida y contacto de confianza."
+        style={styles.primaryCrisisButton}
+      />
+
+      <PrimaryButton
         title="Llamar a emergencias 911"
         onPress={callEmergencyServices}
         variant="danger"
@@ -118,6 +126,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     color: COLORS.text,
     marginBottom: SIZES.base
+  },
+  primaryCrisisButton: {
+    marginBottom: SIZES.padding
   },
   subtitle: {
     fontSize: 18,
