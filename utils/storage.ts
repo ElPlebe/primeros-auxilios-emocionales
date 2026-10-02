@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createConsentRecord, normalizeConsentRecord } from '../features/privacy/consentContent';
 import type { ExerciseFollowUp, SurveyAssessmentResult } from './assessment';
 import { parseJsonArray, parseJsonObject } from './localJson';
 import { createInitialSafetyPlanStatus } from './safetyPlan';
@@ -13,14 +14,16 @@ const CONSENT_ACCEPTED_KEY = 'consentAcceptedAt';
 const SAFETY_PLAN_STATUS_KEY = 'safetyPlanStatus';
 
 export const acceptConsent = async () => {
-  await AsyncStorage.setItem(CONSENT_ACCEPTED_KEY, new Date().toISOString());
+  await AsyncStorage.setItem(CONSENT_ACCEPTED_KEY, JSON.stringify(createConsentRecord()));
 };
 
 export const getConsentAcceptedAt = async () => AsyncStorage.getItem(CONSENT_ACCEPTED_KEY);
 
+export const getConsentRecord = async () => normalizeConsentRecord(await getConsentAcceptedAt());
+
 export const hasAcceptedConsent = async () => {
-  const acceptedAt = await getConsentAcceptedAt();
-  return Boolean(acceptedAt);
+  const consent = await getConsentRecord();
+  return Boolean(consent);
 };
 
 export const getSafetyPlanStatus = async (): Promise<SafetyPlanStatus> => {

@@ -39,6 +39,7 @@ yarn-error.*
 .local-json-test-dist/
 .crisis-routing-test-dist/
 .phone-test-dist/
+.consent-test-dist/
 
 # generated presentation QA artifacts
 presentation-build/

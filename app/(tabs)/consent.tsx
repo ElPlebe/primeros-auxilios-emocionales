@@ -2,23 +2,8 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
-import { HOME_DISCLAIMER } from '../../utils/psychoeducation';
+import { CONSENT_POINTS } from '../../features/privacy/consentContent';
 import { acceptConsent } from '../../utils/storage';
-
-const CONSENT_POINTS = [
-  {
-    title: 'Apoyo inicial, no diagnóstico',
-    body: HOME_DISCLAIMER
-  },
-  {
-    title: 'Datos locales',
-    body: 'La app guarda en este dispositivo tu historial emocional, autoevaluaciones y seguimiento de ejercicios para que puedas revisar tu progreso.'
-  },
-  {
-    title: 'Ayuda urgente visible',
-    body: 'Si estás en peligro inmediato, podrías hacerte daño o necesitas atención urgente, usa la opción de emergencia en lugar de continuar con ejercicios.'
-  }
-];
 
 export default function ConsentScreen() {
   const router = useRouter();

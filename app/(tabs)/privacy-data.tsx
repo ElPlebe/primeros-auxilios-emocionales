@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Alert, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { CONSENT_COPY } from '../../features/privacy/consentContent';
 import { buildWellnessDataExport, buildWellnessSummary, WellnessData, WellnessSummary } from '../../utils/wellnessReport';
 import { clearWellnessHistory, getStoredWellnessData } from '../../utils/storage';
 
@@ -80,8 +81,20 @@ export default function PrivacyDataScreen() {
       <Text style={styles.title}>Privacidad y datos</Text>
       <Text style={styles.subtitle}>
         Tu información de seguimiento y plan de seguridad se guarda localmente en este dispositivo. Puedes revisarla,
-        exportarla o borrarla cuando lo necesites.
+        exportarla o borrarla cuando lo necesites. La sincronización con cuenta será opcional y no inicia sin inicio de
+        sesión y consentimiento.
       </Text>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Alcance de privacidad</Text>
+        <Text style={styles.rowText}>{CONSENT_COPY.localStorage.body}</Text>
+        <Text style={styles.rowText}>{CONSENT_COPY.backendSync.body}</Text>
+        <Text style={styles.rowText}>{CONSENT_COPY.sensitiveData.body}</Text>
+        <Text style={styles.rowText}>
+          Cuando exista cuenta, podrás solicitar eliminación de datos sincronizados desde esta sección. Por ahora, esta
+          pantalla borra el historial local del dispositivo.
+        </Text>
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Datos guardados</Text>
@@ -122,6 +135,13 @@ export default function PrivacyDataScreen() {
         variant="secondary"
         style={styles.secondaryButton}
         accessibilityHint="Abre las opciones para compartir una exportación de tus datos locales."
+      />
+      <PrimaryButton
+        title="Cuenta y sincronización"
+        onPress={() => router.push('/account')}
+        variant="secondary"
+        style={styles.secondaryButton}
+        accessibilityHint="Abre el estado de cuenta y sincronización futura."
       />
       <PrimaryButton
         title="Borrar historial"
