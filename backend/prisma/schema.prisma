@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String                @id @default(uuid())
+  email               String                @unique @db.NVarChar(320)
+  displayName         String?               @map("display_name") @db.NVarChar(160)
+  createdAt           DateTime              @default(now()) @map("created_at")
+  deletedAt           DateTime?             @map("deleted_at")
+  consents            UserConsent[]
+  trustedContact      TrustedContact?
+  surveyAssessments   SurveyAssessment[]
+  exerciseFollowUps   ExerciseFollowUp[]
+  emotionLogs         EmotionLog[]
+  safetyPlanStatus    SafetyPlanStatus?
+  dataExportEvents    DataExportEvent[]
+  dataDeletionRequests DataDeletionRequest[]
+
+  @@map("users")
+}
+
+model ConsentVersion {
+  id          String        @id @default(uuid())
+  version     String        @unique @db.NVarChar(80)
+  bodyHash    String        @map("body_hash") @db.NVarChar(128)
+  publishedAt DateTime      @map("published_at")
+  userConsents UserConsent[]
+
+  @@map("consent_versions")
+}
+
+model UserConsent {
+  id               String         @id @default(uuid())
+  userId           String         @map("user_id")
+  consentVersionId String         @map("consent_version_id")
+  acceptedAt       DateTime       @default(now()) @map("accepted_at")
+  scope            String         @db.NVarChar(80)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consentVersion   ConsentVersion @relation(fields: [consentVersionId], references: [id])
+
+  @@unique([userId, consentVersionId, scope])
+  @@index([userId])
+  @@map("user_consents")
+}
+
+model TrustedContact {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  name      String   @db.NVarChar(120)
+  phoneE164 String   @map("phone_e164") @db.NVarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("trusted_contacts")
+}
+
+model SurveyAssessment {
+  id              String             @id @default(uuid())
+  userId          String             @map("user_id")
+  clientId        String             @map("client_id") @db.NVarChar(80)
+  safetyAnswer    String             @map("safety_answer") @db.NVarChar(20)
+  distressBefore  Int                @map("distress_before")
+  phq4Score       Int                @map("phq4_score")
+  anxietyScore    Int                @map("anxiety_score")
+  depressionScore Int                @map("depression_score")
+  primaryNeed     String             @map("primary_need") @db.NVarChar(40)
+  level           String             @db.NVarChar(20)
+  emergency       Boolean            @default(false)
+  createdAt       DateTime           @default(now()) @map("created_at")
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  followUps       ExerciseFollowUp[]
+
+  @@unique([userId, clientId])
+  @@index([userId, createdAt])
+  @@map("survey_assessments")
+}
+
+model ExerciseFollowUp {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  clientId        String            @map("client_id") @db.NVarChar(80)
+  exerciseId      String            @map("exercise_id") @db.NVarChar(80)
+  assessmentId    String?           @map("assessment_id")
+  distressBefore  Int               @map("distress_before")
+  distressAfter   Int               @map("distress_after")
+  delta           Int
+  helpfulRating   Int?              @map("helpful_rating")
+  helpfulComment  String?           @map("helpful_comment") @db.NVarChar(500)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessment      SurveyAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, clientId])
+  @@index([userId, createdAt])
+  @@map("exercise_follow_ups")
+}
+
+model EmotionLog {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  clientId  String   @map("client_id") @db.NVarChar(80)
+  logDate   DateTime @map("log_date")
+  emotion   String   @db.NVarChar(40)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId])
+  @@index([userId, logDate])
+  @@map("emotion_logs")
+}
+
+model SafetyPlanStatus {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  safePlace      Boolean  @default(false) @map("safe_place")
+  canContact     Boolean  @default(false) @map("can_contact")
+  trustedContact Boolean  @default(false) @map("trusted_contact")
+  urgentHelp     Boolean  @default(false) @map("urgent_help")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("safety_plan_statuses")
+}
+
+model DataExportEvent {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("data_export_events")
+}
+
+model DataDeletionRequest {
+  id          String                @id @default(uuid())
+  userId      String                @map("user_id")
+  status      String   @default("requested") @db.NVarChar(30)
+  requestedAt DateTime              @default(now()) @map("requested_at")
+  completedAt DateTime?             @map("completed_at")
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, requestedAt])
+  @@map("data_deletion_requests")
+}
