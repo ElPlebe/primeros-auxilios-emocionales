@@ -4,6 +4,7 @@ import type { ExerciseFollowUp, SurveyAssessmentResult } from './assessment';
 import { parseJsonArray, parseJsonObject } from './localJson';
 import { createInitialSafetyPlanStatus } from './safetyPlan';
 import type { SafetyPlanStatus } from './safetyPlan';
+import type { SyncQueueRecord } from '../services/sync/syncQueue';
 import type { StoredSurveyAssessment, WellnessData, WellnessEmotionLog } from './wellnessReport';
 
 const COMPLETED_EXERCISES_KEY = 'completedExercises';
@@ -12,6 +13,7 @@ const EXERCISE_FOLLOW_UPS_KEY = 'exerciseFollowUps';
 const EMOTION_HISTORY_KEY = 'emotionHistory';
 const CONSENT_ACCEPTED_KEY = 'consentAcceptedAt';
 const SAFETY_PLAN_STATUS_KEY = 'safetyPlanStatus';
+const SYNC_QUEUE_KEY = 'syncQueue';
 
 export const acceptConsent = async () => {
   await AsyncStorage.setItem(CONSENT_ACCEPTED_KEY, JSON.stringify(createConsentRecord()));
@@ -137,4 +139,13 @@ export const clearWellnessHistory = async () => {
     EXERCISE_FOLLOW_UPS_KEY,
     SAFETY_PLAN_STATUS_KEY
   ]);
+};
+
+export const getSyncQueue = async (): Promise<SyncQueueRecord[]> => {
+  const stored = await AsyncStorage.getItem(SYNC_QUEUE_KEY);
+  return parseJsonArray<SyncQueueRecord>(stored);
+};
+
+export const saveSyncQueue = async (queue: SyncQueueRecord[]) => {
+  await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
 };

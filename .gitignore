@@ -40,6 +40,7 @@ yarn-error.*
 .crisis-routing-test-dist/
 .phone-test-dist/
 .consent-test-dist/
+.sync-queue-test-dist/
 
 # generated presentation QA artifacts
 presentation-build/

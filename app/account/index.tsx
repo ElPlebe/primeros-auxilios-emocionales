@@ -1,7 +1,10 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
+import { getAccessToken } from '../../services/auth/secureTokenStore';
+import { getSyncQueue } from '../../utils/storage';
 
 const ACCOUNT_STATUS_ITEMS = [
   'La app funciona localmente sin cuenta.',
@@ -11,6 +14,20 @@ const ACCOUNT_STATUS_ITEMS = [
 ];
 
 export default function AccountScreen() {
+  const [hasToken, setHasToken] = useState(false);
+  const [pendingRecords, setPendingRecords] = useState(0);
+
+  useEffect(() => {
+    Promise.all([getAccessToken(), getSyncQueue()])
+      .then(([token, queue]) => {
+        setHasToken(Boolean(token));
+        setPendingRecords(queue.filter((record) => record.status === 'pending' || record.status === 'failed').length);
+      })
+      .catch(() => {
+        Alert.alert('No se pudo leer el estado de sincronizacion', 'Intenta abrir esta pantalla nuevamente.');
+      });
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.kicker}>Cuenta</Text>
@@ -36,6 +53,7 @@ export default function AccountScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Pendientes de sincronizacion</Text>
         <Text style={styles.body}>
+          Estado: {hasToken ? 'sesion local detectada' : 'sin sesion activa'}. Registros pendientes: {pendingRecords}.
           Sin cuenta activa no se envia informacion al backend. Los registros nuevos permanecen en este dispositivo hasta
           que exista una sesion valida y aceptes sincronizar.
         </Text>
