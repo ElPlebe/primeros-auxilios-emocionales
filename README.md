@@ -2,60 +2,59 @@
 
 Aplicacion movil desarrollada con React Native y Expo para ofrecer apoyo inicial ante malestar emocional, ansiedad, estres o crisis emocional. El MVP esta pensado como herramienta de orientacion y autorregulacion inmediata, no como sustituto de psicoterapia, diagnostico profesional ni servicios de emergencia.
 
-## Alcance del MVP
+## Alcance Actual
 
-El flujo principal es:
+La version actual esta enfocada en Mexico y funciona local-first:
 
-1. Consentimiento inicial y aviso de alcance.
+1. Consentimiento inicial versionado.
 2. Inicio con acceso visible a ayuda urgente.
-3. Plan de seguridad breve para momentos de crisis o malestar intenso.
-4. Evaluacion breve de seguridad, malestar actual, PHQ-4 y necesidad principal.
-5. Resultado emocional no diagnostico.
-6. Ejercicios sugeridos.
-7. Detalle del ejercicio.
-8. Reevaluacion antes/despues y utilidad percibida.
-9. Seguimiento local, privacidad/exportacion y resumen para revision academica.
-10. Salida visible a ayuda urgente.
+3. Modo crisis offline en `/crisis`.
+4. Plan de seguridad breve.
+5. Evaluacion breve de seguridad, malestar, PHQ-4 y necesidad principal.
+6. Resultado emocional no diagnostico.
+7. Ejercicios sugeridos y seguimiento antes/despues.
+8. Privacidad, exportacion local y borrado de historial.
+9. Pantalla de cuenta preparada para sincronizacion futura.
+10. Backend Fastify con schema SQL Server y endpoints autenticados.
 
-Este MVP no incluye IA avanzada, pagos, panel empresarial, backend clinico ni base de datos remota.
+El modo crisis, recursos de Mexico y datos locales no requieren cuenta.
 
-## Fundamento psicologico
+## Fundamento Psicologico
 
-La aplicacion se apoya en tres capas:
+La aplicacion se apoya en:
 
-- Primeros Auxilios Psicologicos (PAP): prioriza seguridad, estabilizacion, apoyo practico, escucha respetuosa y conexion con redes o servicios.
+- Primeros Auxilios Psicologicos: seguridad, estabilizacion, apoyo practico y conexion con redes o servicios.
 - Cinco principios de Hobfoll et al. (2007): seguridad, calma, autoeficacia, conexion y esperanza.
 - Enfoque humanista: lenguaje empatico, validacion emocional, respeto por la autonomia y ausencia de juicio.
 
-Para la evaluacion breve se usa PHQ-4 como instrumento ultrabreve de tamizaje de sintomas de ansiedad y depresion. El resultado orienta ejercicios dentro de la app, pero no diagnostica trastornos mentales.
+PHQ-4 se usa como tamizaje ultrabreve. El resultado orienta ejercicios dentro de la app, pero no diagnostica trastornos mentales.
 
-## Cuestionario
+## Crisis Mexico
 
-La evaluacion se compone de:
+La app incluye un modo `/crisis` que funciona sin login:
 
-- Pregunta de seguridad inmediata. Si la persona no esta segura o esta en riesgo, la app dirige a `Emergency`.
-- Escala de malestar actual de 0 a 10.
-- PHQ-4 con puntaje total de 0 a 12.
-- Necesidad principal: seguridad, calma, claridad, conexion o esperanza.
+- Emergencias: 911.
+- Linea de la Vida: 800 911 2000.
+- Sitio oficial: https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000
+- Contacto de confianza local.
+- Checklist de seguridad inmediata.
+- Opcion de grounding breve.
 
-Los niveles usados por la app son:
+Los flujos de alto riesgo dirigen primero a `/crisis`: respuesta insegura o no segura, malestar 9-10, nivel severo o aumento de malestar despues de ejercicio.
 
-- 0-2: minimo.
-- 3-5: leve.
-- 6-8: moderado.
-- 9-12: severo.
-
-## Seguimiento
+## Datos Y Seguimiento
 
 El MVP guarda localmente:
 
 - Evaluaciones breves.
 - Ejercicios completados.
-- Malestar antes y despues del ejercicio.
+- Malestar antes y despues.
 - Cambio inmediato observado.
-- Utilidad percibida del ejercicio en escala de 1 a 5.
+- Utilidad percibida en escala 1 a 5.
 - Comentario opcional posterior al ejercicio.
-- Estado local del plan de seguridad breve.
+- Registros emocionales.
+- Estado local del plan de seguridad.
+- Cola de sincronizacion pendiente.
 
 La metrica principal del MVP es:
 
@@ -65,53 +64,65 @@ cambio inmediato = malestar despues - malestar antes
 
 Un cambio negativo indica reduccion del malestar reportado. Esta metrica describe utilidad percibida inmediata; no demuestra tratamiento, cura ni eficacia clinica por si sola.
 
-## Ayuda urgente
+## Backend Y Arquitectura
 
-Si existe peligro inmediato, la app muestra la opcion de llamar a emergencias 911.
+El backend vive en `backend/` y usa:
 
-Para Mexico, la app incluye Linea de la Vida como recurso de apoyo emocional:
+- Node.js con TypeScript.
+- Fastify.
+- Prisma.
+- Azure SQL Database / SQL Server como store relacional objetivo.
+- Autenticacion por bearer token; en tests existe un verificador local solo cuando `NODE_ENV === "test"`.
 
-- Telefono: [800 911 2000](tel:+528009112000?oai_link_source=model_response_hotline)
-- Sitio oficial: [https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000](https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000?oai_link_source=model_response_hotline)
+La app movil nunca debe conectarse directamente a SQL Server. Toda sincronizacion remota debe pasar por la API.
 
-## Seguridad, diseño y accesibilidad
+Endpoints principales:
 
-El MVP incluye un plan de seguridad breve con cuatro pasos: lugar seguro, posibilidad de contactar a alguien, contacto de confianza y ayuda urgente. Este plan se presenta como orientacion de crisis, no como terapia.
+- `GET /health`
+- `GET /consent/current`
+- `POST /me/consents`
+- `GET/POST /me/assessments`
+- `GET/POST /me/exercise-follow-ups`
+- `GET/POST /me/emotion-logs`
+- `GET/PUT /me/safety-plan`
+- `GET/PUT /me/trusted-contact`
+- `GET/POST /me/export-events`
+- `GET/POST /me/deletion-requests`
 
-El sistema visual usa tokens basicos centralizados para botones, tarjetas, titulos, espaciado y tamanos tactiles minimos. Las interacciones principales tienen etiquetas accesibles, area tactil minima de 48 px y estados visibles con texto ademas de color.
+## Sync Movil
 
-## Privacidad
+La sincronizacion movil esta preparada con:
 
-El seguimiento actual usa AsyncStorage, por lo que la informacion se guarda localmente en el dispositivo. La app incluye una pantalla de consentimiento inicial y una seccion de privacidad/datos para revisar, exportar o borrar el historial de seguimiento guardado.
+- `services/auth/secureTokenStore.ts` para tokens en `expo-secure-store`.
+- `services/api/client.ts` para llamadas tipadas a la API.
+- `services/sync/syncQueue.ts` para registros locales con `clientId`, reintentos e idempotencia.
 
-Para una prueba clinica o academica, el texto de consentimiento, resguardo de datos y criterios de derivacion deben revisarse con el asesor o la institucion participante.
+Sin token de acceso, la cola no envia datos y conserva los registros pendientes.
 
-## Estructura relevante
+## Estructura Relevante
 
 ```text
-app/(tabs)/index.tsx              Inicio
-app/(tabs)/consent.tsx            Consentimiento inicial
-app/(tabs)/survey.tsx             Evaluacion breve
-app/(tabs)/results.tsx            Resultado emocional
-app/(tabs)/exercises.tsx          Lista de ejercicios
-app/(tabs)/exercises/[id].tsx     Detalle y seguimiento
-app/(tabs)/info.tsx               Psicoeducacion
-app/(tabs)/emergency.tsx          Ayuda urgente
-app/(tabs)/safety-plan.tsx        Plan de seguridad breve
-app/(tabs)/privacy-data.tsx       Privacidad, exportacion y borrado
-app/(tabs)/summary.tsx            Resumen de seguimiento
-constants/design.ts               Tokens visuales y accesibilidad
-utils/assessment.ts               Logica de tamizaje y seguimiento
-utils/psychoeducation.ts          Contenido psicoeducativo
-utils/safetyPlan.ts               Logica del plan de seguridad
-utils/storage.ts                  Persistencia local
-utils/wellnessReport.ts           Resumen y exportacion de datos
-tests/assessment.test.cjs         Pruebas de evaluacion
+app/crisis/index.tsx                  Modo crisis
+app/account/index.tsx                 Estado de cuenta y sync
+app/(tabs)/consent.tsx                Consentimiento inicial
+app/(tabs)/survey.tsx                 Evaluacion breve
+app/(tabs)/results.tsx                Resultado emocional
+app/(tabs)/exercises/[id].tsx         Detalle y seguimiento
+app/(tabs)/privacy-data.tsx           Privacidad, exportacion y borrado
+backend/prisma/schema.prisma          Schema SQL Server
+backend/src/server.ts                 API Fastify
+features/crisis/*                     Recursos, copy y routing de crisis
+features/privacy/consentContent.ts    Consentimiento versionado
+services/api/client.ts                Cliente API movil
+services/auth/secureTokenStore.ts     Tokens seguros
+services/sync/syncQueue.ts            Cola local de sync
+utils/storage.ts                      Persistencia local
+utils/wellnessReport.ts               Resumen y exportacion
 ```
 
-## Instalacion y ejecucion
+## Instalacion Y Ejecucion
 
-Instalar dependencias:
+Instalar dependencias moviles:
 
 ```bash
 npm install
@@ -123,54 +134,73 @@ Iniciar Expo:
 npx expo start
 ```
 
-Ejecutar en Android:
-
-```bash
-npx expo start --android
-```
-
-## Verificacion
-
-Pruebas de la logica de evaluacion:
-
-```bash
-npm run test:assessment
-```
-
-Verificacion de tipos:
-
-```bash
-npx tsc --noEmit
-```
-
-Lint:
-
-```bash
-npm run lint
-```
-
-Export web de comprobacion:
+Export web:
 
 ```bash
 npx expo export --platform web --output-dir dist
 ```
 
-Build Android preview:
+Instalar backend:
 
 ```bash
-npx eas build -p android --profile preview
+cd backend
+npm install
 ```
 
-## Fuentes base
+## Verificacion
+
+Mobile:
+
+```bash
+npm run test:assessment
+node --test tests/localStorage.test.cjs tests/crisisRouting.test.cjs tests/crisisScreen.test.cjs tests/consent.test.cjs tests/syncQueue.test.cjs tests/phone.test.cjs
+npx tsc --noEmit
+npm run lint
+npx expo export --platform web --output-dir dist
+```
+
+Backend:
+
+```bash
+cd backend
+npm run build
+npm test
+```
+
+Prisma SQL Server:
+
+```bash
+cd backend
+set DATABASE_URL=sqlserver://localhost:1433;database=primeros_auxilios;user=sa;password=YOUR_STRONG_PASSWORD;encrypt=true;trustServerCertificate=true
+npx prisma validate --schema prisma/schema.prisma
+```
+
+## Documentos Store Readiness
+
+- `docs/store-readiness/privacy-policy-draft.md`
+- `docs/store-readiness/qa-checklist.md`
+- `docs/store-readiness/clinical-review-checklist.md`
+
+## Estado Para Stores
+
+Mas cerca de store-ready:
+
+- Crisis mode offline y Mexico-only.
+- Consentimiento y privacidad preparados.
+- Exportacion y borrado local.
+- Backend con auth boundaries y schema SQL.
+- Sync queue local idempotente.
+
+Antes de publicar:
+
+- Revision clinica formal del contenido.
+- Politica de privacidad revisada legalmente.
+- QA en dispositivo fisico Android.
+- Revision de iOS si se publica en App Store.
+- Migrar `expo-av` a `expo-audio` antes de actualizar a Expo SDK 54.
+
+## Fuentes Base
 
 - Organizacion Mundial de la Salud. Primera ayuda psicologica: guia para trabajadores de campo. https://www.who.int/es/publications/i/item/9789241548205
 - Hobfoll, S. E., Watson, P., Bell, C. C., et al. (2007). Five essential elements of immediate and mid-term mass trauma intervention: empirical evidence. https://pubmed.ncbi.nlm.nih.gov/18181708/
 - Kroenke, K., Spitzer, R. L., Williams, J. B. W., & Lowe, B. (2009). An ultra-brief screening scale for anxiety and depression: the PHQ-4. https://pubmed.ncbi.nlm.nih.gov/19996233/
-- National Institutes of Health. Patient Health Questionnaire 4 (PHQ-4). https://www.nih.gov/node/21506
-
-## Pendientes recomendados
-
-- Revision clinica del contenido por un profesional de salud mental.
-- Revision institucional del texto de consentimiento para pruebas con usuarios.
-- Migrar `expo-av` a `expo-audio` antes de actualizar a Expo SDK 54.
-- Definir si el seguimiento seguira siendo local o si se agregara backend con seguridad y privacidad apropiadas.
