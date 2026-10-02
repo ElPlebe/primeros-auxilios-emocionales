@@ -38,6 +38,10 @@ test('user data endpoints reject anonymous access', async () => {
 });
 
 test('users only read their own assessment, follow-up, emotion, export, and deletion records', async () => {
+  await injectAs('user-b', 'POST', '/me/consents', {
+    version: '2026-10-02-mx-local-sync-readiness',
+    scope: 'backend_sync'
+  });
   await injectAs('user-b', 'POST', '/me/assessments', {
     clientId: 'assessment-b',
     safetyAnswer: 'safe',
@@ -79,6 +83,10 @@ test('users only read their own assessment, follow-up, emotion, export, and dele
 });
 
 test('users cannot read or update another user singleton resources', async () => {
+  await injectAs('user-b', 'POST', '/me/consents', {
+    version: '2026-10-02-mx-local-sync-readiness',
+    scope: 'backend_sync'
+  });
   await injectAs('user-b', 'PUT', '/me/safety-plan', {
     safePlace: true,
     canContact: true,
@@ -99,4 +107,38 @@ test('users cannot read or update another user singleton resources', async () =>
   assert.equal(ownerSafetyPlan.statusCode, 200);
   assert.equal(ownerTrustedContact.statusCode, 200);
   assert.equal(ownerTrustedContact.json().phoneE164, '+528009112000');
+});
+
+test('sensitive data writes require accepted backend sync consent', async () => {
+  const denied = await injectAs('user-no-consent', 'POST', '/me/assessments', {
+    clientId: 'assessment-no-consent',
+    safetyAnswer: 'safe',
+    distressBefore: 4,
+    phq4Score: 3,
+    anxietyScore: 2,
+    depressionScore: 1,
+    primaryNeed: 'calma',
+    level: 'leve',
+    emergency: false
+  });
+
+  assert.equal(denied.statusCode, 403);
+
+  await injectAs('user-with-consent', 'POST', '/me/consents', {
+    version: '2026-10-02-mx-local-sync-readiness',
+    scope: 'backend_sync'
+  });
+  const allowed = await injectAs('user-with-consent', 'POST', '/me/assessments', {
+    clientId: 'assessment-with-consent',
+    safetyAnswer: 'safe',
+    distressBefore: 4,
+    phq4Score: 3,
+    anxietyScore: 2,
+    depressionScore: 1,
+    primaryNeed: 'calma',
+    level: 'leve',
+    emergency: false
+  });
+
+  assert.equal(allowed.statusCode, 201);
 });

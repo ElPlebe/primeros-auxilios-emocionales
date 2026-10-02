@@ -4,6 +4,7 @@ import { Alert, Linking, StyleSheet, Text, TextInput, View } from 'react-native'
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { normalizeMexicoPhoneForLinks } from '../../utils/phone';
+import { queueSyncRecord } from '../../utils/storage';
 
 export default function TrustedContactScreen() {
   const [name, setName] = useState('');
@@ -34,6 +35,10 @@ export default function TrustedContactScreen() {
     try {
       await AsyncStorage.setItem('trustedName', name);
       await AsyncStorage.setItem('trustedPhone', normalizedPhone.dialPhone);
+      await queueSyncRecord('trusted_contact', {
+        name,
+        phoneE164: normalizedPhone.dialPhone
+      });
       Alert.alert('Guardado', 'Tu contacto ha sido guardado con éxito.');
     } catch {
       Alert.alert('Error', 'No se pudo guardar el contacto.');

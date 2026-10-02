@@ -1,19 +1,21 @@
 import type { FastifyInstance } from 'fastify';
 import { requireUser } from '../auth/auth.js';
-import { createId, listForUser, memoryStore, upsertByClientId } from '../data/memoryStore.js';
+import { requireBackendSyncConsent } from '../consent/consentStore.js';
+import { getDataStore } from '../data/dataStore.js';
+import { createId } from '../data/memoryStore.js';
 import { asBody, optionalString, requireString } from '../validation/validators.js';
 
 export async function registerEmotionLogRoutes(server: FastifyInstance) {
   server.get('/me/emotion-logs', async (request) => {
-    const user = requireUser(request);
-    return listForUser(memoryStore.emotionLogs, user.id);
+    const user = await requireUser(request);
+    return getDataStore().listEmotionLogs(user.id);
   });
 
   server.post('/me/emotion-logs', async (request, reply) => {
-    const user = requireUser(request);
+    const user = await requireUser(request);
+    await requireBackendSyncConsent(user.id);
     const body = asBody(request.body);
-    const records = listForUser(memoryStore.emotionLogs, user.id);
-    const record = upsertByClientId(records, {
+    const record = await getDataStore().saveEmotionLog({
       id: createId('emotion'),
       userId: user.id,
       clientId: requireString(body, 'clientId', 80),
@@ -21,8 +23,6 @@ export async function registerEmotionLogRoutes(server: FastifyInstance) {
       emotion: requireString(body, 'emotion', 40),
       createdAt: optionalString(body, 'createdAt') ?? new Date().toISOString()
     });
-
-    memoryStore.emotionLogs.set(user.id, records);
     return reply.code(201).send(record);
   });
 }

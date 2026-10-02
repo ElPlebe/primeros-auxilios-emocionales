@@ -1,10 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createConsentRecord, normalizeConsentRecord } from '../features/privacy/consentContent';
+import {
+  createSyncQueueRecord,
+  enqueueOrUpdateRecord,
+  type SyncQueueRecord,
+  type SyncRecordType
+} from '../services/sync/syncQueue';
 import type { ExerciseFollowUp, SurveyAssessmentResult } from './assessment';
 import { parseJsonArray, parseJsonObject } from './localJson';
 import { createInitialSafetyPlanStatus } from './safetyPlan';
 import type { SafetyPlanStatus } from './safetyPlan';
-import type { SyncQueueRecord } from '../services/sync/syncQueue';
 import type { StoredSurveyAssessment, WellnessData, WellnessEmotionLog } from './wellnessReport';
 
 const COMPLETED_EXERCISES_KEY = 'completedExercises';
@@ -43,6 +48,7 @@ export const getSafetyPlanStatus = async (): Promise<SafetyPlanStatus> => {
 
 export const saveSafetyPlanStatus = async (status: SafetyPlanStatus) => {
   await AsyncStorage.setItem(SAFETY_PLAN_STATUS_KEY, JSON.stringify(status));
+  await queueSyncRecord('safety_plan', status);
 };
 
 export const saveCompletedExercise = async (exerciseId: string) => {
@@ -73,9 +79,12 @@ export const saveSurveyAssessment = async (assessment: SurveyAssessmentResult) =
   try {
     const existing = await AsyncStorage.getItem(SURVEY_ASSESSMENTS_KEY);
     const parsed = parseJsonArray<StoredSurveyAssessment>(existing);
-    const next = [{ ...assessment, createdAt: new Date().toISOString() }, ...parsed].slice(0, 50);
+    const syncRecord = createSyncQueueRecord('assessment', assessment);
+    const record = { ...assessment, clientId: syncRecord.clientId, createdAt: new Date().toISOString() };
+    const next = [record, ...parsed].slice(0, 50);
 
     await AsyncStorage.setItem(SURVEY_ASSESSMENTS_KEY, JSON.stringify(next));
+    await queueSyncRecord('assessment', record, record.clientId);
   } catch (error) {
     console.error('Error guardando evaluación:', error);
     throw error;
@@ -96,9 +105,12 @@ export const saveExerciseFollowUp = async (followUp: ExerciseFollowUp) => {
   try {
     const existing = await AsyncStorage.getItem(EXERCISE_FOLLOW_UPS_KEY);
     const parsed = parseJsonArray<ExerciseFollowUp>(existing);
-    const next = [followUp, ...parsed].slice(0, 100);
+    const syncRecord = createSyncQueueRecord('exercise_follow_up', followUp);
+    const record = { ...followUp, clientId: syncRecord.clientId };
+    const next = [record, ...parsed].slice(0, 100);
 
     await AsyncStorage.setItem(EXERCISE_FOLLOW_UPS_KEY, JSON.stringify(next));
+    await queueSyncRecord('exercise_follow_up', record, record.clientId);
   } catch (error) {
     console.error('Error guardando seguimiento:', error);
     throw error;
@@ -148,4 +160,16 @@ export const getSyncQueue = async (): Promise<SyncQueueRecord[]> => {
 
 export const saveSyncQueue = async (queue: SyncQueueRecord[]) => {
   await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
+};
+
+export const queueSyncRecord = async (
+  recordType: SyncRecordType,
+  payload: Record<string, unknown>,
+  clientId?: string
+) => {
+  const queue = await getSyncQueue();
+  const record = createSyncQueueRecord(recordType, payload, clientId);
+  enqueueOrUpdateRecord(queue, record);
+  await saveSyncQueue(queue);
+  return record;
 };

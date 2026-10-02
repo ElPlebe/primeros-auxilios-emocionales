@@ -86,5 +86,9 @@ export function normalizeConsentRecord(stored: string | null): ConsentRecord | n
     // Legacy consent was stored as a plain ISO timestamp string.
   }
 
-  return createConsentRecord(stored);
+  if (/^\d{4}-\d{2}-\d{2}T/.test(stored) && !Number.isNaN(Date.parse(stored))) {
+    return createConsentRecord(stored);
+  }
+
+  return null;
 }

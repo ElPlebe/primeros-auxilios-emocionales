@@ -55,3 +55,10 @@ test('normalizes legacy timestamp consent into current metadata', () => {
   });
   assert.equal(normalizeConsentRecord(null), null);
 });
+
+test('does not treat malformed consent storage as accepted legacy consent', () => {
+  const { normalizeConsentRecord } = compileConsentContent();
+
+  assert.equal(normalizeConsentRecord('[bad'), null);
+  assert.equal(normalizeConsentRecord('not-a-date'), null);
+});

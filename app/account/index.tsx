@@ -3,8 +3,10 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
+import { createApiClient } from '../../services/api/client';
 import { getAccessToken } from '../../services/auth/secureTokenStore';
-import { getSyncQueue } from '../../utils/storage';
+import { sendQueuedRecord, syncPendingRecords } from '../../services/sync/syncQueue';
+import { getSyncQueue, saveSyncQueue } from '../../utils/storage';
 
 const ACCOUNT_STATUS_ITEMS = [
   'La app funciona localmente sin cuenta.',
@@ -16,17 +18,41 @@ const ACCOUNT_STATUS_ITEMS = [
 export default function AccountScreen() {
   const [hasToken, setHasToken] = useState(false);
   const [pendingRecords, setPendingRecords] = useState(0);
+  const [lastSyncStatus, setLastSyncStatus] = useState('Sin sincronizaciones recientes');
+
+  const refreshStatus = async () => {
+    const [token, queue] = await Promise.all([getAccessToken(), getSyncQueue()]);
+    setHasToken(Boolean(token));
+    setPendingRecords(queue.filter((record) => record.status === 'pending' || record.status === 'failed').length);
+  };
 
   useEffect(() => {
-    Promise.all([getAccessToken(), getSyncQueue()])
-      .then(([token, queue]) => {
-        setHasToken(Boolean(token));
-        setPendingRecords(queue.filter((record) => record.status === 'pending' || record.status === 'failed').length);
-      })
+    refreshStatus()
       .catch(() => {
         Alert.alert('No se pudo leer el estado de sincronizacion', 'Intenta abrir esta pantalla nuevamente.');
       });
   }, []);
+
+  const retrySync = async () => {
+    const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+    if (!baseUrl) {
+      Alert.alert('API no configurada', 'Define EXPO_PUBLIC_API_BASE_URL para probar sincronizacion.');
+      return;
+    }
+
+    const queue = await getSyncQueue();
+    const apiClient = createApiClient({ baseUrl, getAccessToken });
+    const result = await syncPendingRecords(queue, {
+      getAccessToken,
+      sendRecord: async (record) => {
+        await sendQueuedRecord(record, apiClient);
+      }
+    });
+
+    await saveSyncQueue(queue);
+    await refreshStatus();
+    setLastSyncStatus(result);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -57,7 +83,16 @@ export default function AccountScreen() {
           Sin cuenta activa no se envia informacion al backend. Los registros nuevos permanecen en este dispositivo hasta
           que exista una sesion valida y aceptes sincronizar.
         </Text>
+        <Text style={styles.body}>Ultimo intento: {lastSyncStatus}</Text>
       </View>
+
+      <PrimaryButton
+        title="Intentar sincronizar pendientes"
+        onPress={retrySync}
+        disabled={!hasToken || pendingRecords === 0}
+        style={styles.syncButton}
+        accessibilityHint="Reintenta enviar registros pendientes al backend configurado."
+      />
 
       <PrimaryButton
         title="Login no disponible en este MVP"
@@ -126,5 +161,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     fontSize: 15,
     lineHeight: 23
+  },
+  syncButton: {
+    marginBottom: SIZES.base
   }
 });

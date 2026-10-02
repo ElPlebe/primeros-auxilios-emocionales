@@ -1,6 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { requireUser } from '../auth/auth.js';
-import { createId, listForUser, memoryStore, upsertByClientId } from '../data/memoryStore.js';
+import { requireBackendSyncConsent } from '../consent/consentStore.js';
+import { getDataStore } from '../data/dataStore.js';
+import { createId } from '../data/memoryStore.js';
 import {
   asBody,
   optionalIntegerInRange,
@@ -11,17 +13,17 @@ import {
 
 export async function registerFollowUpRoutes(server: FastifyInstance) {
   server.get('/me/exercise-follow-ups', async (request) => {
-    const user = requireUser(request);
-    return listForUser(memoryStore.followUps, user.id);
+    const user = await requireUser(request);
+    return getDataStore().listFollowUps(user.id);
   });
 
   server.post('/me/exercise-follow-ups', async (request, reply) => {
-    const user = requireUser(request);
+    const user = await requireUser(request);
+    await requireBackendSyncConsent(user.id);
     const body = asBody(request.body);
-    const records = listForUser(memoryStore.followUps, user.id);
     const distressBefore = requireIntegerInRange(body, 'distressBefore', 0, 10);
     const distressAfter = requireIntegerInRange(body, 'distressAfter', 0, 10);
-    const record = upsertByClientId(records, {
+    const record = await getDataStore().saveFollowUp({
       id: createId('followup'),
       userId: user.id,
       clientId: requireString(body, 'clientId', 80),
@@ -34,8 +36,6 @@ export async function registerFollowUpRoutes(server: FastifyInstance) {
       helpfulComment: optionalString(body, 'helpfulComment', 500),
       createdAt: optionalString(body, 'createdAt') ?? new Date().toISOString()
     });
-
-    memoryStore.followUps.set(user.id, records);
     return reply.code(201).send(record);
   });
 }

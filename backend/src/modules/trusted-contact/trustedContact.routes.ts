@@ -1,12 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { requireUser } from '../auth/auth.js';
-import { memoryStore } from '../data/memoryStore.js';
+import { requireBackendSyncConsent } from '../consent/consentStore.js';
+import { getDataStore } from '../data/dataStore.js';
 import { asBody, requireMexicoPhoneE164, requireString } from '../validation/validators.js';
 
 export async function registerTrustedContactRoutes(server: FastifyInstance) {
   server.get('/me/trusted-contact', async (request, reply) => {
-    const user = requireUser(request);
-    const record = memoryStore.trustedContacts.get(user.id);
+    const user = await requireUser(request);
+    const record = await getDataStore().getTrustedContact(user.id);
     if (!record) {
       return reply.code(404).send({ error: 'Not found' });
     }
@@ -14,19 +15,18 @@ export async function registerTrustedContactRoutes(server: FastifyInstance) {
   });
 
   server.put('/me/trusted-contact', async (request) => {
-    const user = requireUser(request);
+    const user = await requireUser(request);
+    await requireBackendSyncConsent(user.id);
     const body = asBody(request.body);
-    const existing = memoryStore.trustedContacts.get(user.id);
+    const existing = await getDataStore().getTrustedContact(user.id);
     const now = new Date().toISOString();
-    const record = {
+    const record = await getDataStore().saveTrustedContact({
       userId: user.id,
       name: requireString(body, 'name', 120),
       phoneE164: requireMexicoPhoneE164(body),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now
-    };
-
-    memoryStore.trustedContacts.set(user.id, record);
+    });
     return record;
   });
 }

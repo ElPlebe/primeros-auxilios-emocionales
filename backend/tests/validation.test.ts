@@ -22,6 +22,15 @@ async function post(url: string, payload: object) {
 
 before(async () => {
   await server.ready();
+  await server.inject({
+    method: 'POST',
+    url: '/me/consents',
+    headers,
+    payload: {
+      version: '2026-10-02-mx-local-sync-readiness',
+      scope: 'backend_sync'
+    }
+  });
 });
 
 after(async () => {

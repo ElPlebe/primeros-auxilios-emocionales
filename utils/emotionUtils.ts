@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { parseJsonArray } from './localJson';
+import { queueSyncRecord } from './storage';
 
 export interface EmotionLog {
   date: string;
@@ -12,6 +13,7 @@ export const saveEmotion = async (newEntry: EmotionLog): Promise<void> => {
     const history = parseJsonArray<EmotionLog>(stored);
     const updated = [newEntry, ...history.filter(e => e.date !== newEntry.date)];
     await AsyncStorage.setItem('emotionHistory', JSON.stringify(updated));
+    await queueSyncRecord('emotion_log', { ...newEntry });
   } catch (error) {
     console.error('Error saving emotion:', error);
     throw error;

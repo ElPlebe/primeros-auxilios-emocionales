@@ -6,16 +6,19 @@ import { registerConsentRoutes } from './modules/consent/consent.routes.js';
 import { registerEmotionLogRoutes } from './modules/emotions/emotionLogs.routes.js';
 import { registerFollowUpRoutes } from './modules/follow-ups/followUps.routes.js';
 import { registerHealthRoutes } from './modules/health/health.routes.js';
+import { createDataStore, setDataStore } from './modules/data/dataStore.js';
 import { registerPrivacyRoutes } from './modules/privacy/privacy.routes.js';
 import { registerSafetyPlanRoutes } from './modules/safety-plan/safetyPlan.routes.js';
 import { registerTrustedContactRoutes } from './modules/trusted-contact/trustedContact.routes.js';
 
 interface BuildServerOptions {
+  dataStore?: ReturnType<typeof createDataStore>;
   logger?: boolean;
 }
 
 export function buildServer(options: BuildServerOptions = {}) {
   const env = readEnv();
+  setDataStore(options.dataStore ?? createDataStore(env));
   const server = Fastify({
     logger: options.logger ?? env.nodeEnv !== 'test'
   });

@@ -28,6 +28,17 @@ export interface SyncDependencies {
   sendRecord: (record: SyncQueueRecord, token: string) => Promise<void>;
 }
 
+export interface SyncApiClient {
+  postAssessment: (payload: Record<string, unknown>) => Promise<unknown>;
+  postExerciseFollowUp: (payload: Record<string, unknown>) => Promise<unknown>;
+  postEmotionLog: (payload: Record<string, unknown>) => Promise<unknown>;
+  putSafetyPlan: (payload: Record<string, unknown>) => Promise<unknown>;
+  putTrustedContact: (payload: Record<string, unknown>) => Promise<unknown>;
+  postConsent: (payload: Record<string, unknown>) => Promise<unknown>;
+  postExportEvent: () => Promise<unknown>;
+  postDeletionRequest: () => Promise<unknown>;
+}
+
 export function createClientId(prefix = 'client') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -67,6 +78,36 @@ export function enqueueOrUpdateRecord(queue: SyncQueueRecord[], record: SyncQueu
 
   queue.push(next);
   return next;
+}
+
+function withClientId(record: SyncQueueRecord) {
+  return {
+    ...(record.payload as Record<string, unknown>),
+    clientId: record.clientId
+  };
+}
+
+export async function sendQueuedRecord(record: SyncQueueRecord, apiClient: SyncApiClient) {
+  switch (record.recordType) {
+    case 'assessment':
+      return apiClient.postAssessment(withClientId(record));
+    case 'exercise_follow_up':
+      return apiClient.postExerciseFollowUp(withClientId(record));
+    case 'emotion_log':
+      return apiClient.postEmotionLog(withClientId(record));
+    case 'safety_plan':
+      return apiClient.putSafetyPlan(withClientId(record));
+    case 'trusted_contact':
+      return apiClient.putTrustedContact(withClientId(record));
+    case 'consent':
+      return apiClient.postConsent(withClientId(record));
+    case 'export_event':
+      return apiClient.postExportEvent();
+    case 'deletion_request':
+      return apiClient.postDeletionRequest();
+    default:
+      throw new Error(`Unsupported sync record type: ${record.recordType}`);
+  }
 }
 
 export async function syncPendingRecords(queue: SyncQueueRecord[], dependencies: SyncDependencies): Promise<SyncResult> {

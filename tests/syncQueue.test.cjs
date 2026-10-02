@@ -70,3 +70,26 @@ test('sync without an access token is skipped without mutating records', async (
   assert.equal(result, 'skipped_no_auth');
   assert.equal(queueRecord.status, 'pending');
 });
+
+test('dispatches queued records to the matching API client method', async () => {
+  const { createSyncQueueRecord, sendQueuedRecord } = compileSyncQueue();
+  const calls = [];
+  const apiClient = {
+    postAssessment: async (payload) => calls.push(['assessment', payload]),
+    postExerciseFollowUp: async (payload) => calls.push(['follow', payload]),
+    postEmotionLog: async (payload) => calls.push(['emotion', payload]),
+    putSafetyPlan: async (payload) => calls.push(['safety', payload]),
+    putTrustedContact: async (payload) => calls.push(['contact', payload]),
+    postConsent: async (payload) => calls.push(['consent', payload]),
+    postExportEvent: async () => calls.push(['export']),
+    postDeletionRequest: async () => calls.push(['deletion'])
+  };
+
+  await sendQueuedRecord(createSyncQueueRecord('assessment', { distressBefore: 4 }, 'client-3'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('trusted_contact', { phoneE164: '+528009112000' }, 'client-4'), apiClient);
+
+  assert.deepEqual(calls, [
+    ['assessment', { distressBefore: 4, clientId: 'client-3' }],
+    ['contact', { phoneE164: '+528009112000', clientId: 'client-4' }]
+  ]);
+});
