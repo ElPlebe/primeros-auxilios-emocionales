@@ -29,6 +29,7 @@
 - `/health` responde `{ ok: true }`.
 - Rutas `/me/*` rechazan acceso anonimo.
 - Usuario A no ve registros de Usuario B.
+- Usuario A no puede borrar el contacto de confianza de Usuario B; `DELETE /me/trusted-contact` solo borra el propio.
 - Backend rechaza rangos invalidos: malestar fuera de 0-10, PHQ-4 fuera de 0-12 y utilidad fuera de 1-5.
 - Backend rechaza telefonos que no correspondan a Mexico en formato E.164.
 - Prisma schema valida con `DATABASE_URL` SQL Server.
@@ -37,6 +38,8 @@
 
 - Sin token, la cola local devuelve `skipped_no_auth`.
 - Reintentar el mismo `clientId` no crea duplicados locales.
+- Registro emocional local `date` se envia a la API como `logDate`.
+- Eliminar contacto de confianza encola borrado remoto y no un contacto incompleto.
 - Error de red deja registros como pendientes o fallidos con `attemptCount`.
 - Registro sincronizado pasa a estado `synced`.
 
@@ -54,4 +57,3 @@
 - Capturas muestran crisis mode, consentimiento, evaluacion, ejercicios y privacidad.
 - Politica de privacidad publicada coincide con comportamiento real de datos.
 - Incluir Mexico-only en recursos de emergencia para esta version.
-

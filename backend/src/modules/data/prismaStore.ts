@@ -102,6 +102,11 @@ export class PrismaWellnessDataStore implements WellnessDataStore {
     return prisma.trustedContact.findUnique({ where: { userId } });
   }
 
+  async deleteTrustedContact(userId: string): Promise<void> {
+    const prisma = await this.client();
+    await prisma.trustedContact.deleteMany({ where: { userId } });
+  }
+
   async saveTrustedContact(record: TrustedContactRecord): Promise<TrustedContactRecord> {
     await this.ensureUser(record.userId);
     const prisma = await this.client();

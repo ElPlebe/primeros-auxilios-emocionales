@@ -85,9 +85,16 @@ Endpoints principales:
 - `GET/POST /me/exercise-follow-ups`
 - `GET/POST /me/emotion-logs`
 - `GET/PUT /me/safety-plan`
-- `GET/PUT /me/trusted-contact`
+- `GET/PUT/DELETE /me/trusted-contact`
 - `GET/POST /me/export-events`
 - `GET/POST /me/deletion-requests`
+
+Variables requeridas fuera de `NODE_ENV=test`:
+
+- `DATABASE_URL`: conexion SQL Server/Azure SQL para Prisma.
+- `AUTH_AUDIENCE` o `ENTRA_CLIENT_ID`: audiencia esperada del token.
+- `AUTH_ISSUER`: issuer del proveedor de identidad.
+- `AUTH_JWKS_URL`: JWKS usado para validar firmas JWT.
 
 ## Sync Movil
 
@@ -172,7 +179,9 @@ Prisma SQL Server:
 ```bash
 cd backend
 set DATABASE_URL=sqlserver://localhost:1433;database=primeros_auxilios;user=sa;password=YOUR_STRONG_PASSWORD;encrypt=true;trustServerCertificate=true
-npx prisma validate --schema prisma/schema.prisma
+npm run prisma:generate
+npm run prisma:validate
+npm run prisma:deploy
 ```
 
 ## Documentos Store Readiness

@@ -22,6 +22,10 @@ export function createApiClient({ baseUrl, getAccessToken, fetchImpl = fetch }: 
       throw new Error(`API ${response.status} for ${path}`);
     }
 
+    if (response.status === 204) {
+      return {} as T;
+    }
+
     return response.json() as Promise<T>;
   }
 
@@ -37,6 +41,11 @@ export function createApiClient({ baseUrl, getAccessToken, fetchImpl = fetch }: 
       body: JSON.stringify(payload)
     });
 
+  const remove = <T>(path: string) =>
+    request<T>(path, {
+      method: 'DELETE'
+    });
+
   return {
     getCurrentConsent: () => request<ApiRecord>('/consent/current'),
     postConsent: (payload: ApiRecord) => post<ApiRecord>('/me/consents', payload),
@@ -45,6 +54,7 @@ export function createApiClient({ baseUrl, getAccessToken, fetchImpl = fetch }: 
     postEmotionLog: (payload: ApiRecord) => post<ApiRecord>('/me/emotion-logs', payload),
     putSafetyPlan: (payload: ApiRecord) => put<ApiRecord>('/me/safety-plan', payload),
     putTrustedContact: (payload: ApiRecord) => put<ApiRecord>('/me/trusted-contact', payload),
+    deleteTrustedContact: () => remove<ApiRecord>('/me/trusted-contact'),
     postExportEvent: () => post<ApiRecord>('/me/export-events'),
     postDeletionRequest: () => post<ApiRecord>('/me/deletion-requests')
   };

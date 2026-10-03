@@ -10,7 +10,7 @@ const auth = (userId: string) => ({
   authorization: `Bearer ${userId}`
 });
 
-async function injectAs(userId: string, method: 'GET' | 'POST' | 'PUT', url: string, payload?: object) {
+async function injectAs(userId: string, method: 'DELETE' | 'GET' | 'POST' | 'PUT', url: string, payload?: object) {
   const response = await server.inject({
     method,
     url,
@@ -107,6 +107,36 @@ test('users cannot read or update another user singleton resources', async () =>
   assert.equal(ownerSafetyPlan.statusCode, 200);
   assert.equal(ownerTrustedContact.statusCode, 200);
   assert.equal(ownerTrustedContact.json().phoneE164, '+528009112000');
+});
+
+test('users can delete only their own trusted contact', async () => {
+  await injectAs('user-delete-contact', 'POST', '/me/consents', {
+    version: '2026-10-02-mx-local-sync-readiness',
+    scope: 'backend_sync'
+  });
+  await injectAs('other-user', 'POST', '/me/consents', {
+    version: '2026-10-02-mx-local-sync-readiness',
+    scope: 'backend_sync'
+  });
+  await injectAs('user-delete-contact', 'PUT', '/me/trusted-contact', {
+    name: 'Persona de confianza',
+    phoneE164: '+528009112000'
+  });
+
+  const ownerBeforeDelete = await injectAs('user-delete-contact', 'GET', '/me/trusted-contact');
+  assert.equal(ownerBeforeDelete.statusCode, 200);
+
+  const anotherUserDelete = await injectAs('other-user', 'DELETE', '/me/trusted-contact');
+  assert.equal(anotherUserDelete.statusCode, 204);
+
+  const ownerStillHasContact = await injectAs('user-delete-contact', 'GET', '/me/trusted-contact');
+  assert.equal(ownerStillHasContact.statusCode, 200);
+
+  const ownerDelete = await injectAs('user-delete-contact', 'DELETE', '/me/trusted-contact');
+  assert.equal(ownerDelete.statusCode, 204);
+
+  const ownerAfterDelete = await injectAs('user-delete-contact', 'GET', '/me/trusted-contact');
+  assert.equal(ownerAfterDelete.statusCode, 404);
 });
 
 test('sensitive data writes require accepted backend sync consent', async () => {

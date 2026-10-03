@@ -62,6 +62,7 @@ export default function TrustedContactScreen() {
 
   const clearContact = async () => {
     await AsyncStorage.multiRemove(['trustedName', 'trustedPhone']);
+    await queueSyncRecord('trusted_contact', { deleted: true });
     setName('');
     setPhone('');
     Alert.alert('Contacto eliminado', 'Tu contacto ha sido borrado correctamente.');

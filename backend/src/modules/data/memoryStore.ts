@@ -126,6 +126,11 @@ export class MemoryWellnessDataStore implements WellnessDataStore {
     return Promise.resolve(memoryStore.trustedContacts.get(userId) ?? null);
   }
 
+  deleteTrustedContact(userId: string) {
+    memoryStore.trustedContacts.delete(userId);
+    return Promise.resolve();
+  }
+
   saveTrustedContact(record: TrustedContactRecord) {
     memoryStore.trustedContacts.set(record.userId, record);
     return Promise.resolve(record);
@@ -196,6 +201,7 @@ export interface WellnessDataStore {
   getSafetyPlan(userId: string): Promise<SafetyPlanRecord | null>;
   saveSafetyPlan(record: SafetyPlanRecord): Promise<SafetyPlanRecord>;
   getTrustedContact(userId: string): Promise<TrustedContactRecord | null>;
+  deleteTrustedContact(userId: string): Promise<void>;
   saveTrustedContact(record: TrustedContactRecord): Promise<TrustedContactRecord>;
   listExportEvents(userId: string): Promise<EventRecord[]>;
   saveExportEvent(record: EventRecord): Promise<EventRecord>;

@@ -34,6 +34,7 @@ export interface SyncApiClient {
   postEmotionLog: (payload: Record<string, unknown>) => Promise<unknown>;
   putSafetyPlan: (payload: Record<string, unknown>) => Promise<unknown>;
   putTrustedContact: (payload: Record<string, unknown>) => Promise<unknown>;
+  deleteTrustedContact: () => Promise<unknown>;
   postConsent: (payload: Record<string, unknown>) => Promise<unknown>;
   postExportEvent: () => Promise<unknown>;
   postDeletionRequest: () => Promise<unknown>;
@@ -87,6 +88,15 @@ function withClientId(record: SyncQueueRecord) {
   };
 }
 
+function normalizeEmotionPayload(payload: Record<string, unknown>) {
+  if (typeof payload.logDate === 'string') {
+    return payload;
+  }
+
+  const { date, ...rest } = payload;
+  return typeof date === 'string' ? { ...rest, logDate: date } : payload;
+}
+
 export async function sendQueuedRecord(record: SyncQueueRecord, apiClient: SyncApiClient) {
   switch (record.recordType) {
     case 'assessment':
@@ -94,10 +104,13 @@ export async function sendQueuedRecord(record: SyncQueueRecord, apiClient: SyncA
     case 'exercise_follow_up':
       return apiClient.postExerciseFollowUp(withClientId(record));
     case 'emotion_log':
-      return apiClient.postEmotionLog(withClientId(record));
+      return apiClient.postEmotionLog(normalizeEmotionPayload(withClientId(record)));
     case 'safety_plan':
       return apiClient.putSafetyPlan(withClientId(record));
     case 'trusted_contact':
+      if ((record.payload as Record<string, unknown>).deleted === true) {
+        return apiClient.deleteTrustedContact();
+      }
       return apiClient.putTrustedContact(withClientId(record));
     case 'consent':
       return apiClient.postConsent(withClientId(record));

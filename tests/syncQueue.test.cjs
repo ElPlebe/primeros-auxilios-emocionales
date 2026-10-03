@@ -80,16 +80,34 @@ test('dispatches queued records to the matching API client method', async () => 
     postEmotionLog: async (payload) => calls.push(['emotion', payload]),
     putSafetyPlan: async (payload) => calls.push(['safety', payload]),
     putTrustedContact: async (payload) => calls.push(['contact', payload]),
+    deleteTrustedContact: async () => calls.push(['contact-delete']),
     postConsent: async (payload) => calls.push(['consent', payload]),
     postExportEvent: async () => calls.push(['export']),
     postDeletionRequest: async () => calls.push(['deletion'])
   };
 
   await sendQueuedRecord(createSyncQueueRecord('assessment', { distressBefore: 4 }, 'client-3'), apiClient);
-  await sendQueuedRecord(createSyncQueueRecord('trusted_contact', { phoneE164: '+528009112000' }, 'client-4'), apiClient);
+  await sendQueuedRecord(
+    createSyncQueueRecord('exercise_follow_up', { exerciseId: 'grounding', distressBefore: 5 }, 'client-4'),
+    apiClient
+  );
+  await sendQueuedRecord(createSyncQueueRecord('emotion_log', { date: '2026-10-03', emotion: 'Calma' }, 'client-5'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('safety_plan', { safePlace: true }, 'client-6'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('trusted_contact', { phoneE164: '+528009112000' }, 'client-7'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('trusted_contact', { deleted: true }, 'client-8'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('consent', { scope: 'backend_sync' }, 'client-9'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('export_event', {}, 'client-10'), apiClient);
+  await sendQueuedRecord(createSyncQueueRecord('deletion_request', {}, 'client-11'), apiClient);
 
   assert.deepEqual(calls, [
     ['assessment', { distressBefore: 4, clientId: 'client-3' }],
-    ['contact', { phoneE164: '+528009112000', clientId: 'client-4' }]
+    ['follow', { exerciseId: 'grounding', distressBefore: 5, clientId: 'client-4' }],
+    ['emotion', { logDate: '2026-10-03', emotion: 'Calma', clientId: 'client-5' }],
+    ['safety', { safePlace: true, clientId: 'client-6' }],
+    ['contact', { phoneE164: '+528009112000', clientId: 'client-7' }],
+    ['contact-delete'],
+    ['consent', { scope: 'backend_sync', clientId: 'client-9' }],
+    ['export'],
+    ['deletion']
   ]);
 });

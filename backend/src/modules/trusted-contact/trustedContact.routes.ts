@@ -29,4 +29,11 @@ export async function registerTrustedContactRoutes(server: FastifyInstance) {
     });
     return record;
   });
+
+  server.delete('/me/trusted-contact', async (request, reply) => {
+    const user = await requireUser(request);
+    await requireBackendSyncConsent(user.id);
+    await getDataStore().deleteTrustedContact(user.id);
+    return reply.code(204).send();
+  });
 }
