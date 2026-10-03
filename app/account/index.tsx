@@ -6,6 +6,10 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
 import { buildAuth0Config } from '../../services/auth/auth0Config';
+import {
+  clearPendingAuth0Request,
+  savePendingAuth0Request
+} from '../../services/auth/auth0PendingRequest';
 import { clearAuth0Session, persistAuth0Tokens } from '../../services/auth/auth0Session';
 import { getAccessToken } from '../../services/auth/secureTokenStore';
 import { syncPendingQueue } from '../../services/sync/syncService';
@@ -85,6 +89,7 @@ export default function AccountScreen() {
           idToken: tokenResponse.idToken,
           refreshToken: tokenResponse.refreshToken
         });
+        await clearPendingAuth0Request();
         await refreshStatus();
         setLastSyncStatus('Sesion iniciada');
       } catch {
@@ -115,8 +120,18 @@ export default function AccountScreen() {
   };
 
   const login = async () => {
+    if (!request?.codeVerifier) {
+      Alert.alert('Login no listo', 'Espera unos segundos e intenta iniciar sesion nuevamente.');
+      return;
+    }
+
     setIsAuthBusy(true);
     try {
+      await savePendingAuth0Request({
+        codeVerifier: request.codeVerifier,
+        createdAt: new Date().toISOString(),
+        state: request.state
+      });
       await promptAsync();
     } catch {
       Alert.alert('No se pudo abrir Auth0', 'Intenta de nuevo en unos momentos.');
