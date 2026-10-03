@@ -139,6 +139,13 @@ export default function HomeScreen() {
 
       <Text style={styles.sectionTitle}>Más opciones</Text>
       <PrimaryButton
+        title="Cuenta y sincronización"
+        onPress={() => router.push('/account')}
+        variant="secondary"
+        style={styles.tertiaryAction}
+        accessibilityHint="Abre el inicio de sesión con Auth0 y el estado de sincronización."
+      />
+      <PrimaryButton
         title="Plan de seguridad breve"
         onPress={() => router.push('../safety-plan')}
         variant="secondary"

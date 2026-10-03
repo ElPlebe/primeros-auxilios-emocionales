@@ -3,7 +3,7 @@ import { afterEach, test } from 'node:test';
 import type { FastifyInstance } from 'fastify';
 import { buildServer } from '../src/server.js';
 
-process.env.NODE_ENV = 'test';
+Object.assign(process.env, { NODE_ENV: 'test' });
 
 const servers: FastifyInstance[] = [];
 
