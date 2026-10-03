@@ -33,6 +33,19 @@ export function optionalString(body: Body, key: string, maxLength = 500) {
   return value;
 }
 
+export function requireStringArray(body: Body, key: string, maxItems: number, maxItemLength: number) {
+  const value = body[key];
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.length > maxItems ||
+    value.some((item) => typeof item !== 'string' || item.trim().length === 0 || item.length > maxItemLength)
+  ) {
+    badRequest(`Invalid ${key}`);
+  }
+  return value as string[];
+}
+
 export function requireBoolean(body: Body, key: string) {
   const value = body[key];
   if (typeof value !== 'boolean') {

@@ -50,6 +50,7 @@ export function createApiClient({ baseUrl, getAccessToken, fetchImpl = fetch }: 
     getCurrentConsent: () => request<ApiRecord>('/consent/current'),
     postConsent: (payload: ApiRecord) => post<ApiRecord>('/me/consents', payload),
     postAssessment: (payload: ApiRecord) => post<ApiRecord>('/me/assessments', payload),
+    postCustomExercise: (payload: ApiRecord) => post<ApiRecord>('/me/custom-exercises', payload),
     postExerciseFollowUp: (payload: ApiRecord) => post<ApiRecord>('/me/exercise-follow-ups', payload),
     postEmotionLog: (payload: ApiRecord) => post<ApiRecord>('/me/emotion-logs', payload),
     putSafetyPlan: (payload: ApiRecord) => put<ApiRecord>('/me/safety-plan', payload),

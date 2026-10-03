@@ -1,5 +1,6 @@
 export type SyncRecordType =
   | 'assessment'
+  | 'custom_exercise'
   | 'exercise_follow_up'
   | 'emotion_log'
   | 'safety_plan'
@@ -30,6 +31,7 @@ export interface SyncDependencies {
 
 export interface SyncApiClient {
   postAssessment: (payload: Record<string, unknown>) => Promise<unknown>;
+  postCustomExercise: (payload: Record<string, unknown>) => Promise<unknown>;
   postExerciseFollowUp: (payload: Record<string, unknown>) => Promise<unknown>;
   postEmotionLog: (payload: Record<string, unknown>) => Promise<unknown>;
   putSafetyPlan: (payload: Record<string, unknown>) => Promise<unknown>;
@@ -101,6 +103,8 @@ export async function sendQueuedRecord(record: SyncQueueRecord, apiClient: SyncA
   switch (record.recordType) {
     case 'assessment':
       return apiClient.postAssessment(withClientId(record));
+    case 'custom_exercise':
+      return apiClient.postCustomExercise(withClientId(record));
     case 'exercise_follow_up':
       return apiClient.postExerciseFollowUp(withClientId(record));
     case 'emotion_log':

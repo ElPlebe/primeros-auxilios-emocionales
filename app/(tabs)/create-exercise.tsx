@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CustomExercise } from '../(tabs)/types/customExercise';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { queueSyncRecord } from '../../utils/storage';
 
 export default function CreateCustomExerciseScreen() {
   const [title, setTitle] = useState('');
@@ -46,6 +47,7 @@ export default function CreateCustomExerciseScreen() {
       const customExercises = existing ? JSON.parse(existing) : [];
       customExercises.push(newExercise);
       await AsyncStorage.setItem('customExercises', JSON.stringify(customExercises));
+      await queueSyncRecord('custom_exercise', newExercise, newExercise.id);
       Alert.alert('Ejercicio guardado', 'Tu ejercicio personalizado ha sido guardado con éxito.');
       setTitle('');
       setDescription('');

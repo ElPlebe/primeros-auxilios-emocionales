@@ -27,8 +27,12 @@
 ## Backend
 
 - `/health` responde `{ ok: true }`.
+- Respuestas incluyen headers basicos: `x-content-type-options`, `x-frame-options`, `referrer-policy`.
+- Preflight CORS permite solo origenes en `CORS_ORIGINS`.
+- Rutas `/me/*` aplican rate limit cuando `RATE_LIMIT_MAX` esta configurado.
 - Rutas `/me/*` rechazan acceso anonimo.
 - Usuario A no ve registros de Usuario B.
+- Usuario A no ve ejercicios personalizados de Usuario B.
 - Usuario A no puede borrar el contacto de confianza de Usuario B; `DELETE /me/trusted-contact` solo borra el propio.
 - Backend rechaza rangos invalidos: malestar fuera de 0-10, PHQ-4 fuera de 0-12 y utilidad fuera de 1-5.
 - Backend rechaza telefonos que no correspondan a Mexico en formato E.164.
@@ -40,6 +44,8 @@
 - Reintentar el mismo `clientId` no crea duplicados locales.
 - Registro emocional local `date` se envia a la API como `logDate`.
 - Eliminar contacto de confianza encola borrado remoto y no un contacto incompleto.
+- Ejercicios personalizados nuevos se encolan como `custom_exercise`.
+- Con `EXPO_PUBLIC_API_BASE_URL` y token guardado, la app reintenta sync al volver a estado activo.
 - Error de red deja registros como pendientes o fallidos con `attemptCount`.
 - Registro sincronizado pasa a estado `synced`.
 

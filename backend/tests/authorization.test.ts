@@ -61,6 +61,13 @@ test('users only read their own assessment, follow-up, emotion, export, and dele
     delta: -2,
     helpfulRating: 4
   });
+  await injectAs('user-b', 'POST', '/me/custom-exercises', {
+    clientId: 'custom-b',
+    title: 'Respirar con calma',
+    description: 'Una practica breve',
+    steps: ['Inhala', 'Exhala'],
+    createdAt: '2026-10-03T00:00:00.000Z'
+  });
   await injectAs('user-b', 'POST', '/me/emotion-logs', {
     clientId: 'emotion-b',
     logDate: '2026-10-02T00:00:00.000Z',
@@ -71,6 +78,7 @@ test('users only read their own assessment, follow-up, emotion, export, and dele
 
   for (const url of [
     '/me/assessments',
+    '/me/custom-exercises',
     '/me/exercise-follow-ups',
     '/me/emotion-logs',
     '/me/export-events',

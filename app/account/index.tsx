@@ -3,15 +3,15 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
-import { createApiClient } from '../../services/api/client';
 import { getAccessToken } from '../../services/auth/secureTokenStore';
-import { sendQueuedRecord, syncPendingRecords } from '../../services/sync/syncQueue';
+import { syncPendingQueue } from '../../services/sync/syncService';
 import { getSyncQueue, saveSyncQueue } from '../../utils/storage';
 
 const ACCOUNT_STATUS_ITEMS = [
   'La app funciona localmente sin cuenta.',
-  'El inicio de sesion y la sincronizacion aun no estan activos.',
-  'Cuando se habilite, la sincronizacion requerira consentimiento y guardara tokens fuera de AsyncStorage.',
+  'El inicio de sesion aun no muestra una pantalla para usuario final.',
+  'La sincronizacion reintenta pendientes si existe API configurada, token valido y consentimiento.',
+  'Los tokens se guardan fuera de AsyncStorage.',
   'El modo crisis y los recursos de Mexico seguiran disponibles sin iniciar sesion.'
 ];
 
@@ -40,16 +40,12 @@ export default function AccountScreen() {
       return;
     }
 
-    const queue = await getSyncQueue();
-    const apiClient = createApiClient({ baseUrl, getAccessToken });
-    const result = await syncPendingRecords(queue, {
+    const result = await syncPendingQueue({
+      baseUrl,
       getAccessToken,
-      sendRecord: async (record) => {
-        await sendQueuedRecord(record, apiClient);
-      }
+      getSyncQueue,
+      saveSyncQueue
     });
-
-    await saveSyncQueue(queue);
     await refreshStatus();
     setLastSyncStatus(result);
   };
@@ -59,7 +55,7 @@ export default function AccountScreen() {
       <Text style={styles.kicker}>Cuenta</Text>
       <Text style={styles.title}>Sincronizacion proximamente</Text>
       <Text style={styles.subtitle}>
-        Este MVP esta listo para conectar una cuenta, pero todavia no muestra formularios de login ni simula una sesion.
+        Este MVP ya prepara la cola remota, pero todavia necesita conectar el login real del proveedor de identidad.
       </Text>
 
       <View style={styles.statusCard}>

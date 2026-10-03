@@ -82,6 +82,7 @@ Endpoints principales:
 - `GET /consent/current`
 - `POST /me/consents`
 - `GET/POST /me/assessments`
+- `GET/POST /me/custom-exercises`
 - `GET/POST /me/exercise-follow-ups`
 - `GET/POST /me/emotion-logs`
 - `GET/PUT /me/safety-plan`
@@ -95,6 +96,9 @@ Variables requeridas fuera de `NODE_ENV=test`:
 - `AUTH_AUDIENCE` o `ENTRA_CLIENT_ID`: audiencia esperada del token.
 - `AUTH_ISSUER`: issuer del proveedor de identidad.
 - `AUTH_JWKS_URL`: JWKS usado para validar firmas JWT.
+- `CORS_ORIGINS`: origenes permitidos separados por coma.
+- `RATE_LIMIT_MAX`: limite por ventana para rutas `/me/*` en produccion. Default: `120`.
+- `RATE_LIMIT_WINDOW_MS`: ventana de rate limit. Default: `60000`.
 
 ## Sync Movil
 
@@ -103,8 +107,10 @@ La sincronizacion movil esta preparada con:
 - `services/auth/secureTokenStore.ts` para tokens en `expo-secure-store`.
 - `services/api/client.ts` para llamadas tipadas a la API.
 - `services/sync/syncQueue.ts` para registros locales con `clientId`, reintentos e idempotencia.
+- `services/sync/syncService.ts` para reintentar pendientes de forma manual o automatica.
 
-Sin token de acceso, la cola no envia datos y conserva los registros pendientes.
+Sin token de acceso, la cola no envia datos y conserva los registros pendientes. Cuando existe `EXPO_PUBLIC_API_BASE_URL`
+y un token guardado, el layout principal reintenta la cola al abrir la app o volver a estado activo.
 
 ## Estructura Relevante
 
@@ -115,6 +121,7 @@ app/(tabs)/consent.tsx                Consentimiento inicial
 app/(tabs)/survey.tsx                 Evaluacion breve
 app/(tabs)/results.tsx                Resultado emocional
 app/(tabs)/exercises/[id].tsx         Detalle y seguimiento
+app/(tabs)/create-exercise.tsx        Ejercicios personalizados locales/sync
 app/(tabs)/privacy-data.tsx           Privacidad, exportacion y borrado
 backend/prisma/schema.prisma          Schema SQL Server
 backend/src/server.ts                 API Fastify
@@ -123,6 +130,7 @@ features/privacy/consentContent.ts    Consentimiento versionado
 services/api/client.ts                Cliente API movil
 services/auth/secureTokenStore.ts     Tokens seguros
 services/sync/syncQueue.ts            Cola local de sync
+services/sync/syncService.ts          Sync manual y automatico
 utils/storage.ts                      Persistencia local
 utils/wellnessReport.ts               Resumen y exportacion
 ```

@@ -6,7 +6,10 @@ const baseEnv = {
   authAudience: '',
   authIssuer: '',
   authJwksUrl: '',
-  port: 3000
+  corsOrigins: [],
+  port: 3000,
+  rateLimitMax: 0,
+  rateLimitWindowMs: 60_000
 };
 
 test('uses memory store only for test environment', () => {

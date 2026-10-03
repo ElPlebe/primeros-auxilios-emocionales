@@ -76,6 +76,7 @@ test('dispatches queued records to the matching API client method', async () => 
   const calls = [];
   const apiClient = {
     postAssessment: async (payload) => calls.push(['assessment', payload]),
+    postCustomExercise: async (payload) => calls.push(['custom-exercise', payload]),
     postExerciseFollowUp: async (payload) => calls.push(['follow', payload]),
     postEmotionLog: async (payload) => calls.push(['emotion', payload]),
     putSafetyPlan: async (payload) => calls.push(['safety', payload]),
@@ -87,6 +88,10 @@ test('dispatches queued records to the matching API client method', async () => 
   };
 
   await sendQueuedRecord(createSyncQueueRecord('assessment', { distressBefore: 4 }, 'client-3'), apiClient);
+  await sendQueuedRecord(
+    createSyncQueueRecord('custom_exercise', { title: 'Respirar', steps: ['Inhala'] }, 'client-12'),
+    apiClient
+  );
   await sendQueuedRecord(
     createSyncQueueRecord('exercise_follow_up', { exerciseId: 'grounding', distressBefore: 5 }, 'client-4'),
     apiClient
@@ -101,6 +106,7 @@ test('dispatches queued records to the matching API client method', async () => 
 
   assert.deepEqual(calls, [
     ['assessment', { distressBefore: 4, clientId: 'client-3' }],
+    ['custom-exercise', { title: 'Respirar', steps: ['Inhala'], clientId: 'client-12' }],
     ['follow', { exerciseId: 'grounding', distressBefore: 5, clientId: 'client-4' }],
     ['emotion', { logDate: '2026-10-03', emotion: 'Calma', clientId: 'client-5' }],
     ['safety', { safePlace: true, clientId: 'client-6' }],

@@ -27,6 +27,16 @@ export interface FollowUpRecord {
   createdAt: string;
 }
 
+export interface CustomExerciseRecord {
+  id: string;
+  userId: string;
+  clientId: string;
+  title: string;
+  description: string;
+  steps: string[];
+  createdAt: string;
+}
+
 export interface EmotionLogRecord {
   id: string;
   userId: string;
@@ -69,6 +79,7 @@ export interface DeletionRequestRecord {
 
 export const memoryStore = {
   assessments: new Map<string, AssessmentRecord[]>(),
+  customExercises: new Map<string, CustomExerciseRecord[]>(),
   followUps: new Map<string, FollowUpRecord[]>(),
   emotionLogs: new Map<string, EmotionLogRecord[]>(),
   safetyPlans: new Map<string, SafetyPlanRecord>(),
@@ -88,6 +99,17 @@ export class MemoryWellnessDataStore implements WellnessDataStore {
     const records = listForUser(memoryStore.assessments, record.userId);
     const saved = upsertByClientId(records, record);
     memoryStore.assessments.set(record.userId, records);
+    return Promise.resolve(saved);
+  }
+
+  listCustomExercises(userId: string) {
+    return Promise.resolve(listForUser(memoryStore.customExercises, userId));
+  }
+
+  saveCustomExercise(record: CustomExerciseRecord) {
+    const records = listForUser(memoryStore.customExercises, record.userId);
+    const saved = upsertByClientId(records, record);
+    memoryStore.customExercises.set(record.userId, records);
     return Promise.resolve(saved);
   }
 
@@ -194,6 +216,8 @@ export interface WellnessDataStore {
   kind: 'memory' | 'prisma';
   listAssessments(userId: string): Promise<AssessmentRecord[]>;
   saveAssessment(record: AssessmentRecord): Promise<AssessmentRecord>;
+  listCustomExercises(userId: string): Promise<CustomExerciseRecord[]>;
+  saveCustomExercise(record: CustomExerciseRecord): Promise<CustomExerciseRecord>;
   listFollowUps(userId: string): Promise<FollowUpRecord[]>;
   saveFollowUp(record: FollowUpRecord): Promise<FollowUpRecord>;
   listEmotionLogs(userId: string): Promise<EmotionLogRecord[]>;

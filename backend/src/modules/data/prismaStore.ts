@@ -1,5 +1,6 @@
 import type {
   AssessmentRecord,
+  CustomExerciseRecord,
   DeletionRequestRecord,
   EmotionLogRecord,
   EventRecord,
@@ -50,6 +51,23 @@ export class PrismaWellnessDataStore implements WellnessDataStore {
       create: record,
       update: record
     });
+  }
+
+  async listCustomExercises(userId: string): Promise<CustomExerciseRecord[]> {
+    const prisma = await this.client();
+    const records = await prisma.customExercise.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+    return records.map(fromPrismaCustomExercise);
+  }
+
+  async saveCustomExercise(record: CustomExerciseRecord): Promise<CustomExerciseRecord> {
+    await this.ensureUser(record.userId);
+    const prisma = await this.client();
+    const saved = await prisma.customExercise.upsert({
+      where: { userId_clientId: { userId: record.userId, clientId: record.clientId } },
+      create: toPrismaCustomExercise(record),
+      update: toPrismaCustomExercise(record)
+    });
+    return fromPrismaCustomExercise(saved);
   }
 
   async listFollowUps(userId: string): Promise<FollowUpRecord[]> {
@@ -172,5 +190,30 @@ export class PrismaWellnessDataStore implements WellnessDataStore {
     const prisma = await this.client();
     const count = await prisma.userConsent.count({ where: { userId, scope } });
     return count > 0;
+  }
+}
+
+function toPrismaCustomExercise(record: CustomExerciseRecord) {
+  const { steps, ...rest } = record;
+  return {
+    ...rest,
+    stepsJson: JSON.stringify(steps)
+  };
+}
+
+function fromPrismaCustomExercise(record: CustomExerciseRecord & { stepsJson?: string }) {
+  const { stepsJson, ...rest } = record;
+  return {
+    ...rest,
+    steps: typeof stepsJson === 'string' ? parseStepsJson(stepsJson) : record.steps
+  };
+}
+
+function parseStepsJson(value: string) {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.every((item) => typeof item === 'string') ? parsed : [];
+  } catch {
+    return [];
   }
 }

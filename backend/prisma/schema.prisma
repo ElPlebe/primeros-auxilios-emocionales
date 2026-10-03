@@ -16,6 +16,7 @@ model User {
   consents            UserConsent[]
   trustedContact      TrustedContact?
   surveyAssessments   SurveyAssessment[]
+  customExercises     CustomExercise[]
   exerciseFollowUps   ExerciseFollowUp[]
   emotionLogs         EmotionLog[]
   safetyPlanStatus    SafetyPlanStatus?
@@ -80,6 +81,21 @@ model SurveyAssessment {
   @@unique([userId, clientId])
   @@index([userId, createdAt])
   @@map("survey_assessments")
+}
+
+model CustomExercise {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  clientId    String   @map("client_id") @db.NVarChar(80)
+  title       String   @db.NVarChar(120)
+  description String   @db.NVarChar(500)
+  stepsJson   String   @map("steps_json") @db.NVarChar(2000)
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId])
+  @@index([userId, createdAt])
+  @@map("custom_exercises")
 }
 
 model ExerciseFollowUp {

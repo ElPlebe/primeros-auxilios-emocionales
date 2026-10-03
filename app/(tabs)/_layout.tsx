@@ -1,8 +1,11 @@
 import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import { Slot } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
+import { useAutoSyncPendingQueue } from '../../hooks/useAutoSyncPendingQueue';
 
 export default function Layout() {
+  useAutoSyncPendingQueue();
+
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_700Bold,
