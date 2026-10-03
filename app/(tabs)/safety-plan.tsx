@@ -38,16 +38,16 @@ export default function SafetyPlanScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Plan de seguridad breve</Text>
       <Text style={styles.subtitle}>
-        Una guía rápida para organizar tus próximos pasos cuando el malestar se siente intenso.
+        Una guía inspirada en Safety Planning Intervention para organizar señales de alerta, estrategias, contactos y ambiente más seguro.
       </Text>
 
       <View style={styles.urgentCard}>
-        <Text style={styles.urgentTitle}>Si hay peligro inmediato</Text>
+        <Text style={styles.urgentTitle}>Revisión rápida: ¿puedes mantenerte a salvo ahora?</Text>
         <Text style={styles.urgentText}>
-          Prioriza llamar a emergencias o buscar una persona que pueda acompañarte ahora. Este plan no reemplaza atención profesional.
+          Si la respuesta es no, prioriza llamar a emergencias, Línea de la Vida o una persona que pueda acompañarte ahora. Este plan no reemplaza atención profesional.
         </Text>
         <PrimaryButton
-          title="Llamar o ver ayuda urgente"
+          title="No puedo mantenerme a salvo"
           onPress={() => router.push('/crisis')}
           variant="danger"
           accessibilityHint="Abre la pantalla con opciones de emergencia y líneas de apoyo."
@@ -93,6 +93,7 @@ export default function SafetyPlanScreen() {
               </View>
             </View>
             <Text style={styles.stepDescription}>{step.description}</Text>
+            <Text style={styles.stepExample}>{step.example}</Text>
             <Text style={styles.stepAction}>{step.actionLabel}</Text>
           </TouchableOpacity>
         );
@@ -201,6 +202,14 @@ const styles = StyleSheet.create({
   stepDescription: {
     ...TYPOGRAPHY.body,
     marginBottom: 8
+  },
+  stepExample: {
+    ...TYPOGRAPHY.caption,
+    backgroundColor: '#F0F4F8',
+    borderRadius: SIZES.radius,
+    color: COLORS.text,
+    marginBottom: 8,
+    padding: 10
   },
   stepAction: {
     color: COLORS.primary,

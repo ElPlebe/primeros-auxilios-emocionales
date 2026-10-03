@@ -11,7 +11,10 @@ export type ExerciseId =
   | 'escritura'
   | 'escucha'
   | 'ayuda'
-  | 'afirmacionesAnsiedad';
+  | 'afirmacionesAnsiedad'
+  | 'visualizacion'
+  | 'movimiento'
+  | 'relajacion';
 
 export interface SurveyAssessmentInput {
   safetyAnswer: SafetyAnswer;
@@ -141,26 +144,29 @@ export const HELPFUL_RATING_OPTIONS: { value: HelpfulRating; label: string }[] =
 export const EXERCISE_LABELS: Record<ExerciseId, string> = {
   respiracion: 'Respiración guiada',
   grounding: 'Grounding 5-4-3-2-1',
-  afirmaciones: 'Afirmaciones positivas',
+  afirmaciones: 'Autocompasión breve',
   escritura: 'Escritura emocional',
   escucha: 'Escucha consciente',
   ayuda: 'Contacto con ayuda urgente',
-  afirmacionesAnsiedad: 'Afirmaciones para ansiedad'
+  afirmacionesAnsiedad: 'Afirmaciones para ansiedad',
+  visualizacion: 'Visualización calmante',
+  movimiento: 'Movimiento suave',
+  relajacion: 'Relajación muscular progresiva'
 };
 
 const RECOMMENDATIONS_BY_LEVEL: Record<DistressLevel, ExerciseId[]> = {
-  minimo: ['respiracion', 'afirmaciones'],
-  leve: ['respiracion', 'afirmaciones', 'escritura'],
-  moderado: ['grounding', 'respiracion', 'escritura'],
-  severo: ['respiracion', 'grounding', 'ayuda']
+  minimo: ['respiracion', 'afirmaciones', 'escucha'],
+  leve: ['respiracion', 'escritura', 'visualizacion'],
+  moderado: ['grounding', 'respiracion', 'relajacion'],
+  severo: ['ayuda', 'grounding', 'respiracion']
 };
 
 const RECOMMENDATIONS_BY_NEED: Record<SupportNeed, ExerciseId[]> = {
-  seguridad: ['ayuda', 'grounding'],
-  calma: ['respiracion', 'grounding'],
+  seguridad: ['ayuda', 'grounding', 'respiracion'],
+  calma: ['respiracion', 'grounding', 'relajacion'],
   claridad: ['escritura', 'grounding'],
-  conexion: ['ayuda', 'escucha'],
-  esperanza: ['afirmaciones', 'respiracion']
+  conexion: ['ayuda', 'grounding', 'escucha'],
+  esperanza: ['movimiento', 'respiracion', 'escritura']
 };
 
 export const RESULT_CONTENT: Record<
@@ -189,8 +195,8 @@ export const RESULT_CONTENT: Record<
   }
 };
 
-export function hasEmergencyRisk(answer: SafetyAnswer) {
-  return answer !== 'safe';
+export function hasEmergencyRisk(answer: SafetyAnswer, distressBefore?: number | null) {
+  return answer !== 'safe' || (typeof distressBefore === 'number' && distressBefore >= 9);
 }
 
 export function getPhq4Level(total: number): DistressLevel {
@@ -251,6 +257,10 @@ export function isExerciseId(value: unknown): value is ExerciseId {
 }
 
 export function getExerciseRecommendations(level: DistressLevel, primaryNeed: SupportNeed) {
+  if (level === 'severo') {
+    return RECOMMENDATIONS_BY_LEVEL.severo;
+  }
+
   const ordered = [...RECOMMENDATIONS_BY_NEED[primaryNeed], ...RECOMMENDATIONS_BY_LEVEL[level]];
   return Array.from(new Set(ordered)).slice(0, 3);
 }
@@ -264,7 +274,8 @@ export function assessSurvey(input: SurveyAssessmentInput): SurveyAssessmentResu
 
   const phq4Score = input.phq4Answers.reduce<number>((sum, answer) => sum + answer, 0);
   const level = getPhq4Level(phq4Score);
-  const emergency = hasEmergencyRisk(input.safetyAnswer);
+  const emergency = hasEmergencyRisk(input.safetyAnswer, distressBefore);
+  const highDistressRecommendations: ExerciseId[] = ['grounding', 'respiracion', 'ayuda'];
 
   return {
     emergency,
@@ -274,7 +285,12 @@ export function assessSurvey(input: SurveyAssessmentInput): SurveyAssessmentResu
     anxietyScore: input.phq4Answers[0] + input.phq4Answers[1],
     depressionScore: input.phq4Answers[2] + input.phq4Answers[3],
     primaryNeed: input.primaryNeed,
-    recommendedExerciseIds: emergency ? ['ayuda'] : getExerciseRecommendations(level, input.primaryNeed)
+    recommendedExerciseIds:
+      input.safetyAnswer !== 'safe'
+        ? ['ayuda', 'grounding', 'respiracion']
+        : distressBefore >= 9
+          ? highDistressRecommendations
+          : getExerciseRecommendations(level, input.primaryNeed)
   };
 }
 

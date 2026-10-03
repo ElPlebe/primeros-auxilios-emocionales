@@ -21,7 +21,8 @@ test('crisis route exists and presents immediate Mexico support actions', () => 
     'Llamar al 911',
     'Llamar a Linea de la Vida',
     'Contacto de confianza',
-    'Estoy en un lugar mas seguro',
+    'Ubica si puedes mantenerte a salvo',
+    'Guíame ahora con grounding',
     'tel:911',
     'tel:+528009112000'
   ]) {

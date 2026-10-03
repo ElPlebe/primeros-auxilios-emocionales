@@ -6,12 +6,12 @@ export const CRISIS_COPY = {
     callEmergency: 'Llamar al 911',
     callLifeLine: 'Llamar a Linea de la Vida',
     trustedContact: 'Contacto de confianza',
-    grounding: 'Hacer grounding breve'
+    grounding: 'Guíame ahora con grounding'
   },
   checklist: [
-    'Estoy en un lugar mas seguro',
-    'Puedo estar con alguien o en un lugar visible',
-    'Puedo alejarme de objetos o situaciones de riesgo',
-    'Se como pedir ayuda urgente'
+    'Ubica si puedes mantenerte a salvo en este momento',
+    'Busca estar con alguien o en un lugar visible',
+    'Aleja objetos, lugares o situaciones que aumenten el riesgo',
+    'Usa 911, Línea de la Vida o tu contacto de confianza si el riesgo continúa'
   ]
 } as const;

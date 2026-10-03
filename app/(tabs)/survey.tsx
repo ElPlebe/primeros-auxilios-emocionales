@@ -49,7 +49,7 @@ export default function SurveyScreen() {
       return;
     }
 
-    const crisisRoute = getCrisisRouteForSurvey({ safetyAnswer });
+    const crisisRoute = getCrisisRouteForSurvey({ safetyAnswer, distressBefore });
 
     if (crisisRoute) {
       router.replace(crisisRoute);
@@ -172,6 +172,21 @@ export default function SurveyScreen() {
                     </TouchableOpacity>
                   ))}
                 </View>
+                {distressBefore !== null && distressBefore >= 9 && (
+                  <View style={styles.emergencyBox}>
+                    <Text style={styles.emergencyTitle}>Tu malestar está muy alto.</Text>
+                    <Text style={styles.emergencyText}>
+                      Antes de seguir, puede ser más seguro abrir ayuda urgente o contactar a alguien.
+                    </Text>
+                    <PrimaryButton
+                      title="Ir a ayuda urgente"
+                      onPress={() => router.replace('/crisis')}
+                      variant="danger"
+                      style={styles.emergencyButton}
+                      accessibilityHint="Abre opciones de ayuda urgente por malestar intenso."
+                    />
+                  </View>
+                )}
               </View>
 
               <View style={styles.section}>

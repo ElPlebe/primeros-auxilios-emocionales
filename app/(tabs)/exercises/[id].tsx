@@ -26,93 +26,8 @@ import {
   normalizeDistressValue,
   shouldRequireHelpfulRating
 } from '../../../utils/assessment';
+import { EXERCISE_CATALOG } from '../../../utils/exerciseCatalog';
 import { saveCompletedExercise, saveExerciseFollowUp } from '../../../utils/storage';
-
-type ExerciseContent = {
-  title: string;
-  description: string;
-  steps: string[];
-};
-
-const exerciseData: Record<ExerciseId, ExerciseContent> = {
-  respiracion: {
-    title: 'Respiración guiada',
-    description: 'Esta técnica te ayuda a calmar el cuerpo mediante respiraciones lentas y controladas.',
-    steps: [
-      'Siéntate en un lugar tranquilo y apoya ambos pies en el suelo.',
-      'Inhala por la nariz durante 4 segundos.',
-      'Sostén el aire durante 4 segundos si te resulta cómodo.',
-      'Exhala lentamente por la boca durante 6 segundos.',
-      'Repite por al menos 5 ciclos y observa si algo cambia en tu cuerpo.'
-    ]
-  },
-  grounding: {
-    title: 'Grounding 5-4-3-2-1',
-    description: 'Una técnica para volver al presente usando tus sentidos cuando la emoción se siente muy intensa.',
-    steps: [
-      'Mira y nombra 5 cosas que puedes ver.',
-      'Toca 4 objetos cercanos y describe su textura.',
-      'Escucha 3 sonidos distintos, cercanos o lejanos.',
-      'Detecta 2 olores o sensaciones corporales.',
-      'Piensa en 1 cosa que puedas saborear o una acción pequeña que puedas hacer ahora.'
-    ]
-  },
-  afirmaciones: {
-    title: 'Afirmaciones positivas',
-    description: 'Frases breves de autocompasión para responderte con más cuidado y menos juicio.',
-    steps: [
-      'Cierra los ojos o baja la mirada si eso te ayuda.',
-      'Respira profundo una vez antes de empezar.',
-      'Repite: "Estoy haciendo lo mejor que puedo en este momento".',
-      'Repite: "Esto que siento es difícil, pero no tengo que resolverlo todo ahora".',
-      'Elige una frase propia y repítela lentamente tres veces.'
-    ]
-  },
-  escritura: {
-    title: 'Escritura emocional',
-    description: 'Escribir ayuda a ordenar la experiencia: situación, pensamiento, emoción y siguiente paso.',
-    steps: [
-      'Abre una nota o toma papel.',
-      'Escribe qué ocurrió o qué parece haber detonado este malestar.',
-      'Anota qué pensamiento apareció con más fuerza.',
-      'Nombra la emoción principal y ponle intensidad del 0 al 10.',
-      'Escribe una interpretación alternativa o un paso pequeño y realista para las próximas horas.'
-    ]
-  },
-  escucha: {
-    title: 'Escucha consciente',
-    description: 'Un ejercicio breve para dirigir tu atención a sonidos presentes y bajar la sensación de aislamiento.',
-    steps: [
-      'Ponte audífonos si los tienes a la mano.',
-      'Escoge un audio relajante de tu preferencia.',
-      'Cierra los ojos si te resulta cómodo.',
-      'Cuando tu mente se vaya a otro tema, vuelve suavemente al sonido.',
-      'Hazlo por al menos 5 minutos.'
-    ]
-  },
-  ayuda: {
-    title: 'Contacto con ayuda urgente',
-    description: 'Si te sientes en riesgo o necesitas apoyo inmediato, prioriza contactar a una persona o servicio de ayuda.',
-    steps: [
-      'Si hay peligro inmediato, llama a emergencias.',
-      'Si puedes, avisa a una persona de confianza dónde estás y qué necesitas.',
-      'Usa una línea de apoyo emocional de tu país si necesitas hablar con alguien ahora.',
-      'Permanece en un lugar acompañado o visible si no te sientes seguro/a.',
-      'Buscar ayuda es una decisión de cuidado, no una falla personal.'
-    ]
-  },
-  afirmacionesAnsiedad: {
-    title: 'Afirmaciones para ansiedad',
-    description: 'Una guía auditiva para calmar tu mente y reenfocar tus pensamientos en momentos de ansiedad.',
-    steps: [
-      'Busca un lugar tranquilo y sin distracciones.',
-      'Colócate cómodo y cierra los ojos si lo deseas.',
-      'Escucha el audio con atención y respira profundo.',
-      'Permite que cada afirmación entre en tu mente sin juzgar.',
-      'Repite este ejercicio cuando lo necesites.'
-    ]
-  }
-};
 
 const imageForExercise: Record<ExerciseId, any> = {
   respiracion: require('../../../assets/images/respiracion-decorativa.png'),
@@ -121,14 +36,19 @@ const imageForExercise: Record<ExerciseId, any> = {
   escritura: require('../../../assets/images/escritura-emocional.png'),
   escucha: require('../../../assets/images/escucha-consciente.png'),
   ayuda: require('../../../assets/images/contacto-ayuda.png'),
-  afirmacionesAnsiedad: require('../../../assets/images/afirmaciones-ansiedad.png')
+  afirmacionesAnsiedad: require('../../../assets/images/afirmaciones-ansiedad.png'),
+  visualizacion: require('../../../assets/images/visualizacion-calmante.png'),
+  movimiento: require('../../../assets/images/ejercicio-fisico-suave.png'),
+  relajacion: require('../../../assets/images/respiracion.png')
 };
 
 const audioForExercise: Partial<Record<ExerciseId, any>> = {
   respiracion: require('../../../assets/audios/respiracion-guiada.mp3'),
   afirmaciones: require('../../../assets/audios/afirmaciones-positivas.mp3'),
   escucha: require('../../../assets/audios/escucha-consciente.mp3'),
-  afirmacionesAnsiedad: require('../../../assets/audios/afirmaciones-ansiedad.mp3')
+  afirmacionesAnsiedad: require('../../../assets/audios/afirmaciones-ansiedad.mp3'),
+  visualizacion: require('../../../assets/audios/visualizacion-calmante.mp3'),
+  movimiento: require('../../../assets/audios/ejercicio-fisico-suave.mp3')
 };
 
 const firstParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -214,6 +134,8 @@ export default function ExerciseDetailScreen() {
   const [completed, setCompleted] = useState(false);
   const [saved, setSaved] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [distressBeforeValue, setDistressBeforeValue] = useState<number | null>(() =>
     normalizeDistressValue(firstParam(distressBefore))
   );
@@ -222,7 +144,7 @@ export default function ExerciseDetailScreen() {
   const [helpfulComment, setHelpfulComment] = useState('');
 
   const exerciseId = firstParam(id);
-  const content = isExerciseId(exerciseId) ? exerciseData[exerciseId] : null;
+  const content = isExerciseId(exerciseId) ? EXERCISE_CATALOG[exerciseId] : null;
   const assessmentLevelParam = firstParam(assessmentLevel);
   const normalizedAssessmentLevel = assessmentLevelParam ? normalizeDistressLevel(assessmentLevelParam) : undefined;
   const sourceParam = firstParam(source);
@@ -239,15 +161,39 @@ export default function ExerciseDetailScreen() {
   const playAudio = async () => {
     try {
       if (isExerciseId(exerciseId) && audioForExercise[exerciseId]) {
+        if (sound) {
+          await sound.playAsync();
+          setIsAudioPlaying(true);
+          return;
+        }
+
         const { sound: createdSound } = await Audio.Sound.createAsync(audioForExercise[exerciseId]);
+        createdSound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded) {
+            setIsAudioPlaying(status.isPlaying);
+          }
+        });
         setSound(createdSound);
         await createdSound.playAsync();
+        setIsAudioPlaying(true);
       } else {
         Alert.alert('Audio no disponible', 'Este ejercicio no tiene audio asociado.');
       }
     } catch {
       Alert.alert('Error', 'No se pudo reproducir el audio.');
     }
+  };
+
+  const pauseAudio = async () => {
+    if (!sound) return;
+    await sound.pauseAsync();
+    setIsAudioPlaying(false);
+  };
+
+  const stopAudio = async () => {
+    if (!sound) return;
+    await sound.stopAsync();
+    setIsAudioPlaying(false);
   };
 
   useEffect(() => {
@@ -257,6 +203,10 @@ export default function ExerciseDetailScreen() {
       }
     };
   }, [sound]);
+
+  useEffect(() => {
+    setCurrentStepIndex(0);
+  }, [exerciseId]);
 
   if (!content || !isExerciseId(exerciseId)) {
     return (
@@ -275,6 +225,8 @@ export default function ExerciseDetailScreen() {
 
     setCompleted(true);
   };
+
+  const currentStep = content?.steps[currentStepIndex];
 
   const handleSaveProgress = async () => {
     if (distressBeforeValue === null || distressAfterValue === null) {
@@ -318,6 +270,9 @@ export default function ExerciseDetailScreen() {
         <>
           <Text style={styles.title}>{content.title}</Text>
           <Text style={styles.description}>{content.description}</Text>
+          <Text style={styles.metaText}>
+            {content.categoryLabel} · {content.durationMinutes} minutos
+          </Text>
 
           <View style={styles.followUpBox}>
             <Text style={styles.followUpTitle}>Antes de empezar</Text>
@@ -332,14 +287,63 @@ export default function ExerciseDetailScreen() {
               resizeMode="contain"
             />
             {audioForExercise[exerciseId] && (
-              <PrimaryButton title="Reproducir audio" onPress={playAudio} style={{ marginVertical: 8 }} />
+              <View style={styles.audioControls}>
+                <PrimaryButton
+                  title={isAudioPlaying ? 'Audio reproduciéndose' : 'Reproducir audio'}
+                  onPress={playAudio}
+                  disabled={isAudioPlaying}
+                  style={styles.audioButton}
+                  accessibilityHint="Reproduce la guía auditiva de este ejercicio."
+                />
+                <PrimaryButton
+                  title="Pausar audio"
+                  onPress={pauseAudio}
+                  disabled={!sound || !isAudioPlaying}
+                  variant="secondary"
+                  style={styles.audioButton}
+                  accessibilityHint="Pausa la guía auditiva."
+                />
+                <PrimaryButton
+                  title="Detener audio"
+                  onPress={stopAudio}
+                  disabled={!sound}
+                  variant="ghost"
+                  style={styles.audioButton}
+                  accessibilityHint="Detiene la guía auditiva y vuelve al inicio del audio."
+                />
+              </View>
             )}
           </View>
 
-          <Text style={styles.stepsTitle}>Pasos:</Text>
-          {content.steps.map((step, index) => (
-            <Text key={index} style={styles.step}>• {step}</Text>
-          ))}
+          <View style={styles.guidanceBox}>
+            <Text style={styles.stepsTitle}>Cuándo usarlo</Text>
+            <Text style={styles.step}>{content.recommendedWhen}</Text>
+            <Text style={styles.stepsTitle}>Cuándo pausar o cambiar</Text>
+            <Text style={styles.step}>{content.avoidWhen}</Text>
+          </View>
+
+          <View style={styles.stepCard}>
+            <Text style={styles.stepsTitle}>Paso {currentStepIndex + 1} de {content.steps.length}</Text>
+            <Text style={styles.currentStep}>{currentStep}</Text>
+            <View style={styles.stepControls}>
+              <PrimaryButton
+                title="Anterior"
+                onPress={() => setCurrentStepIndex((value) => Math.max(0, value - 1))}
+                disabled={currentStepIndex === 0}
+                variant="ghost"
+                style={styles.stepButton}
+              />
+              <PrimaryButton
+                title={currentStepIndex === content.steps.length - 1 ? 'Último paso' : 'Siguiente'}
+                onPress={() => setCurrentStepIndex((value) => Math.min(content.steps.length - 1, value + 1))}
+                disabled={currentStepIndex === content.steps.length - 1}
+                variant="secondary"
+                style={styles.stepButton}
+              />
+            </View>
+          </View>
+
+          <Text style={styles.evidenceText}>{content.evidence}</Text>
 
           <PrimaryButton
             title="Finalizar ejercicio"
@@ -451,6 +455,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.textMuted,
     marginBottom: SIZES.padding
+  },
+  metaText: {
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    marginBottom: SIZES.base,
+    textTransform: 'uppercase'
   },
   followUpBox: {
     backgroundColor: COLORS.card,
@@ -600,5 +611,49 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     marginBottom: 10
+  },
+  audioControls: {
+    gap: SIZES.base,
+    width: '100%'
+  },
+  audioButton: {
+    marginVertical: 0
+  },
+  guidanceBox: {
+    backgroundColor: '#F0F4F8',
+    borderLeftColor: COLORS.primary,
+    borderLeftWidth: 5,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.padding,
+    padding: 14
+  },
+  stepCard: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radius,
+    borderWidth: 1,
+    marginBottom: SIZES.padding,
+    padding: 16
+  },
+  currentStep: {
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    lineHeight: 26,
+    marginBottom: SIZES.base * 2
+  },
+  stepControls: {
+    flexDirection: 'row',
+    gap: SIZES.base
+  },
+  stepButton: {
+    flex: 1
+  },
+  evidenceText: {
+    color: COLORS.textMuted,
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: SIZES.base
   }
 });

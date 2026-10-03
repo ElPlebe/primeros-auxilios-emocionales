@@ -59,7 +59,7 @@ test('routes to emergency when the safety answer is not safe regardless of PHQ-4
   });
 
   assert.equal(result.emergency, true);
-  assert.deepEqual(result.recommendedExerciseIds, ['ayuda']);
+  assert.deepEqual(result.recommendedExerciseIds, ['ayuda', 'grounding', 'respiracion']);
 });
 
 test('prioritizes the user primary need when recommending exercises', () => {
@@ -158,6 +158,7 @@ test('defines the required psychoeducation sections for the MVP', () => {
     'humanistic-approach',
     'screening',
     'exercises',
+    'exercise-evidence',
     'urgent-help'
   ]);
   assert.match(psychoeducation.HOME_DISCLAIMER, /no sustituye/i);
@@ -241,18 +242,18 @@ test('builds a thesis-friendly wellness summary and data export', () => {
 test('defines a brief crisis-oriented safety plan with measurable progress', () => {
   assert.deepEqual(
     safetyPlan.SAFETY_PLAN_STEPS.map((step) => step.id),
-    ['safePlace', 'canContact', 'trustedContact', 'urgentHelp']
+    ['warningSigns', 'internalCoping', 'safePeoplePlaces', 'trustedContact', 'professionalHelp', 'saferEnvironment']
   );
 
   const initial = safetyPlan.createInitialSafetyPlanStatus();
   assert.deepEqual(safetyPlan.getSafetyPlanProgress(initial), {
     completed: 0,
-    total: 4,
+    total: 6,
     isComplete: false
   });
 
-  const partial = safetyPlan.updateSafetyPlanStep(initial, 'safePlace', true);
-  const ready = safetyPlan.updateSafetyPlanStep(partial, 'urgentHelp', true);
+  const partial = safetyPlan.updateSafetyPlanStep(initial, 'warningSigns', true);
+  const ready = safetyPlan.updateSafetyPlanStep(partial, 'professionalHelp', true);
 
   assert.equal(safetyPlan.getSafetyPlanProgress(ready).completed, 2);
   assert.throws(

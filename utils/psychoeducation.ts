@@ -4,6 +4,7 @@ export type PsychoeducationSectionId =
   | 'humanistic-approach'
   | 'screening'
   | 'exercises'
+  | 'exercise-evidence'
   | 'urgent-help';
 
 export interface PsychoeducationSection {
@@ -63,9 +64,20 @@ export const PSYCHOEDUCATION_SECTIONS: PsychoeducationSection[] = [
     id: 'exercises',
     title: 'Ejercicios breves',
     body: [
-      'La respiración guiada busca reducir activación fisiológica y dirigir la atención al cuerpo.',
-      'El grounding ayuda a volver al presente mediante los sentidos cuando la emoción se siente intensa.',
-      'La escritura emocional ayuda a ordenar situación, pensamiento, emoción y un siguiente paso concreto.'
+      'La app prioriza ejercicios corporales y de orientación al presente cuando el malestar está alto, porque en crisis suele ser difícil leer, razonar o tomar muchas decisiones.',
+      'La respiración guiada usa exhalaciones suaves y evita forzar retención de aire. Si aparece mareo o incomodidad, se recomienda volver a respirar normal.',
+      'El grounding ayuda a volver al presente mediante los sentidos cuando la emoción se siente intensa. No sustituye ayuda urgente si hay riesgo.',
+      'La escritura emocional se reserva para momentos de mayor estabilidad, cuando puede ayudar a ordenar situación, pensamiento, emoción y siguiente paso.'
+    ]
+  },
+  {
+    id: 'exercise-evidence',
+    title: 'Por qué estos ejercicios',
+    body: [
+      'Los ejercicios se organizan por necesidad: seguridad, calma corporal, orientación al presente, activación breve, claridad emocional y autocompasión.',
+      'La relajación muscular progresiva y la respiración lenta cuentan con evidencia para reducir ansiedad o estrés, aunque sus efectos dependen de la persona y del contexto.',
+      'La escritura expresiva tiene efectos pequeños y suele funcionar mejor como práctica repetida, no como primera opción ante crisis intensa.',
+      'El plan de seguridad sigue la lógica de Safety Planning Intervention: señales de alerta, estrategias internas, apoyo social, servicios profesionales y ambiente más seguro.'
     ]
   },
   {
@@ -103,5 +115,20 @@ export const EVIDENCE_SOURCES: EvidenceSource[] = [
     title: 'Línea de la Vida',
     description: 'Recurso de apoyo emocional para México.',
     url: 'https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000'
+  },
+  {
+    title: 'Respiración para ansiedad',
+    description: 'Revisión/meta-análisis sobre intervenciones respiratorias para ansiedad.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/33540222/'
+  },
+  {
+    title: 'Relajación muscular progresiva',
+    description: 'Revisión sistemática sobre estrés, ansiedad y depresión.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/38322293/'
+  },
+  {
+    title: 'Safety Planning Intervention',
+    description: 'Intervención de seguridad asociada con menos conducta suicida y más vinculación a tratamiento.',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC6142908/'
   }
 ];
