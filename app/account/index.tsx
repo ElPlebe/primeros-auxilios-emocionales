@@ -1,24 +1,45 @@
-import { useEffect, useState } from 'react';
+import { exchangeCodeAsync, ResponseType, useAuthRequest } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
+import { buildAuth0Config } from '../../services/auth/auth0Config';
+import { clearAuth0Session, persistAuth0Tokens } from '../../services/auth/auth0Session';
 import { getAccessToken } from '../../services/auth/secureTokenStore';
 import { syncPendingQueue } from '../../services/sync/syncService';
 import { getSyncQueue, saveSyncQueue } from '../../utils/storage';
 
+WebBrowser.maybeCompleteAuthSession();
+
 const ACCOUNT_STATUS_ITEMS = [
   'La app funciona localmente sin cuenta.',
-  'El inicio de sesion aun no muestra una pantalla para usuario final.',
+  'El inicio de sesion usa Auth0 Universal Login con PKCE.',
   'La sincronizacion reintenta pendientes si existe API configurada, token valido y consentimiento.',
   'Los tokens se guardan fuera de AsyncStorage.',
   'El modo crisis y los recursos de Mexico seguiran disponibles sin iniciar sesion.'
 ];
 
 export default function AccountScreen() {
+  const auth0Config = useMemo(() => buildAuth0Config(), []);
   const [hasToken, setHasToken] = useState(false);
+  const [isAuthBusy, setIsAuthBusy] = useState(false);
   const [pendingRecords, setPendingRecords] = useState(0);
   const [lastSyncStatus, setLastSyncStatus] = useState('Sin sincronizaciones recientes');
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: auth0Config.clientId,
+      extraParams: {
+        audience: auth0Config.audience
+      },
+      redirectUri: auth0Config.redirectUri,
+      responseType: ResponseType.Code,
+      scopes: ['openid', 'profile', 'email', 'offline_access'],
+      usePKCE: true
+    },
+    auth0Config.discovery
+  );
 
   const refreshStatus = async () => {
     const [token, queue] = await Promise.all([getAccessToken(), getSyncQueue()]);
@@ -32,6 +53,49 @@ export default function AccountScreen() {
         Alert.alert('No se pudo leer el estado de sincronizacion', 'Intenta abrir esta pantalla nuevamente.');
       });
   }, []);
+
+  useEffect(() => {
+    const exchangeCode = async () => {
+      if (response?.type !== 'success') {
+        return;
+      }
+
+      const code = response.params.code;
+      const codeVerifier = request?.codeVerifier;
+      if (!code || !codeVerifier) {
+        Alert.alert('Login incompleto', 'Auth0 no devolvio un codigo valido para completar la sesion.');
+        return;
+      }
+
+      setIsAuthBusy(true);
+      try {
+        const tokenResponse = await exchangeCodeAsync(
+          {
+            clientId: auth0Config.clientId,
+            code,
+            extraParams: {
+              code_verifier: codeVerifier
+            },
+            redirectUri: auth0Config.redirectUri
+          },
+          auth0Config.discovery
+        );
+        await persistAuth0Tokens({
+          accessToken: tokenResponse.accessToken,
+          idToken: tokenResponse.idToken,
+          refreshToken: tokenResponse.refreshToken
+        });
+        await refreshStatus();
+        setLastSyncStatus('Sesion iniciada');
+      } catch {
+        Alert.alert('No se pudo iniciar sesion', 'Revisa la configuracion de Auth0 e intenta nuevamente.');
+      } finally {
+        setIsAuthBusy(false);
+      }
+    };
+
+    exchangeCode();
+  }, [auth0Config, request?.codeVerifier, response]);
 
   const retrySync = async () => {
     const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
@@ -50,12 +114,38 @@ export default function AccountScreen() {
     setLastSyncStatus(result);
   };
 
+  const login = async () => {
+    setIsAuthBusy(true);
+    try {
+      await promptAsync();
+    } catch {
+      Alert.alert('No se pudo abrir Auth0', 'Intenta de nuevo en unos momentos.');
+    } finally {
+      setIsAuthBusy(false);
+    }
+  };
+
+  const logout = async () => {
+    const logoutUrl = `${auth0Config.issuer}v2/logout?client_id=${encodeURIComponent(
+      auth0Config.clientId
+    )}&returnTo=${encodeURIComponent(auth0Config.redirectUri)}`;
+    setIsAuthBusy(true);
+    try {
+      await WebBrowser.openAuthSessionAsync(logoutUrl, auth0Config.redirectUri);
+    } finally {
+      await clearAuth0Session();
+      await refreshStatus();
+      setLastSyncStatus('Sesion cerrada');
+      setIsAuthBusy(false);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.kicker}>Cuenta</Text>
-      <Text style={styles.title}>Sincronizacion proximamente</Text>
+      <Text style={styles.title}>Cuenta y sincronizacion</Text>
       <Text style={styles.subtitle}>
-        Este MVP ya prepara la cola remota, pero todavia necesita conectar el login real del proveedor de identidad.
+        Inicia sesion con Auth0 para habilitar sincronizacion remota. El modo crisis sigue disponible sin cuenta.
       </Text>
 
       <View style={styles.statusCard}>
@@ -90,12 +180,21 @@ export default function AccountScreen() {
         accessibilityHint="Reintenta enviar registros pendientes al backend configurado."
       />
 
-      <PrimaryButton
-        title="Login no disponible en este MVP"
-        onPress={() => undefined}
-        disabled
-        accessibilityHint="El inicio de sesion se habilitara en una fase posterior."
-      />
+      {hasToken ? (
+        <PrimaryButton
+          title="Cerrar sesion"
+          onPress={logout}
+          disabled={isAuthBusy}
+          accessibilityHint="Cierra tu sesion de Auth0 en este dispositivo."
+        />
+      ) : (
+        <PrimaryButton
+          title="Iniciar sesion con Auth0"
+          onPress={login}
+          disabled={!request || isAuthBusy}
+          accessibilityHint="Abre Auth0 para iniciar sesion y habilitar sincronizacion."
+        />
+      )}
     </ScrollView>
   );
 }

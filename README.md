@@ -93,18 +93,29 @@ Endpoints principales:
 Variables requeridas fuera de `NODE_ENV=test`:
 
 - `DATABASE_URL`: conexion SQL Server/Azure SQL para Prisma.
-- `AUTH_AUDIENCE` o `ENTRA_CLIENT_ID`: audiencia esperada del token.
+- `AUTH_AUDIENCE`: audiencia esperada del token. Para Auth0: `https://primeros-auxilios-emocionales-api`.
 - `AUTH_ISSUER`: issuer del proveedor de identidad.
 - `AUTH_JWKS_URL`: JWKS usado para validar firmas JWT.
 - `CORS_ORIGINS`: origenes permitidos separados por coma.
 - `RATE_LIMIT_MAX`: limite por ventana para rutas `/me/*` en produccion. Default: `120`.
 - `RATE_LIMIT_WINDOW_MS`: ventana de rate limit. Default: `60000`.
 
+Auth0 configurado para esta rama:
+
+- Domain: `dev-hqmwn1jxx5kcopc4.us.auth0.com`
+- Mobile Client ID: `bnx3HhBHBp0Jk0nzbZUrzamcWFnibVkh`
+- API audience/identifier: `https://primeros-auxilios-emocionales-api`
+- Redirect/logout URI: `primerosauxiliosemocionales://auth`
+- Backend issuer: `https://dev-hqmwn1jxx5kcopc4.us.auth0.com/`
+- Backend JWKS: `https://dev-hqmwn1jxx5kcopc4.us.auth0.com/.well-known/jwks.json`
+
 ## Sync Movil
 
 La sincronizacion movil esta preparada con:
 
 - `services/auth/secureTokenStore.ts` para tokens en `expo-secure-store`.
+- `services/auth/auth0Config.ts` para mapear Auth0 a app/backend.
+- `services/auth/auth0Session.ts` para persistir o limpiar tokens Auth0.
 - `services/api/client.ts` para llamadas tipadas a la API.
 - `services/sync/syncQueue.ts` para registros locales con `clientId`, reintentos e idempotencia.
 - `services/sync/syncService.ts` para reintentar pendientes de forma manual o automatica.
