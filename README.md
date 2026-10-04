@@ -195,12 +195,18 @@ npm test
 
 Prisma SQL Server:
 
-```bash
+```powershell
 cd backend
-set DATABASE_URL=sqlserver://localhost:1433;database=primeros_auxilios;user=sa;password=YOUR_STRONG_PASSWORD;encrypt=true;trustServerCertificate=true
+$env:DATABASE_URL="sqlserver://localhost:1433;database=primeros_auxilios_emocionales;integratedSecurity=true;trustServerCertificate=true"
 npm run prisma:generate
 npm run prisma:validate
-npm run prisma:deploy
+npm run prisma:migrate -- --name init_local_sql_express
+```
+
+Si Windows Auth no logra conectarse desde Prisma, la alternativa local es crear un login SQL dedicado para la app y usar:
+
+```powershell
+$env:DATABASE_URL="sqlserver://localhost:1433;database=primeros_auxilios_emocionales;user=primeros_auxilios_app;password=YOUR_STRONG_PASSWORD;encrypt=true;trustServerCertificate=true"
 ```
 
 ## Documentos Store Readiness

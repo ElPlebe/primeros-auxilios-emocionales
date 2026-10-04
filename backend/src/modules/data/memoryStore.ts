@@ -48,10 +48,12 @@ export interface EmotionLogRecord {
 
 export interface SafetyPlanRecord {
   userId: string;
-  safePlace: boolean;
-  canContact: boolean;
+  warningSigns: boolean;
+  internalCoping: boolean;
+  safePeoplePlaces: boolean;
   trustedContact: boolean;
-  urgentHelp: boolean;
+  professionalHelp: boolean;
+  saferEnvironment: boolean;
   updatedAt: string;
 }
 

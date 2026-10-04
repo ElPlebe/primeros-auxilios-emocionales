@@ -133,14 +133,16 @@ model EmotionLog {
 }
 
 model SafetyPlanStatus {
-  id             String   @id @default(uuid())
-  userId         String   @unique @map("user_id")
-  safePlace      Boolean  @default(false) @map("safe_place")
-  canContact     Boolean  @default(false) @map("can_contact")
-  trustedContact Boolean  @default(false) @map("trusted_contact")
-  urgentHelp     Boolean  @default(false) @map("urgent_help")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+  warningSigns     Boolean  @default(false) @map("warning_signs")
+  internalCoping   Boolean  @default(false) @map("internal_coping")
+  safePeoplePlaces Boolean  @default(false) @map("safe_people_places")
+  trustedContact   Boolean  @default(false) @map("trusted_contact")
+  professionalHelp Boolean  @default(false) @map("professional_help")
+  saferEnvironment Boolean  @default(false) @map("safer_environment")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("safety_plan_statuses")
 }

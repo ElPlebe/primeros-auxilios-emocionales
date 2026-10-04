@@ -20,6 +20,16 @@ async function post(url: string, payload: object) {
   return response;
 }
 
+async function put(url: string, payload: object) {
+  const response = await server.inject({
+    method: 'PUT',
+    url,
+    headers,
+    payload
+  });
+  return response;
+}
+
 before(async () => {
   await server.ready();
   await server.inject({
@@ -90,4 +100,35 @@ test('rejects malformed Mexico trusted-contact phone values', async () => {
   });
 
   assert.equal(response.statusCode, 400);
+});
+
+test('requires the six SPI safety-plan status fields', async () => {
+  const valid = await put('/me/safety-plan', {
+    warningSigns: true,
+    internalCoping: true,
+    safePeoplePlaces: false,
+    trustedContact: true,
+    professionalHelp: false,
+    saferEnvironment: true
+  });
+  const missingProfessionalHelp = await put('/me/safety-plan', {
+    warningSigns: true,
+    internalCoping: true,
+    safePeoplePlaces: false,
+    trustedContact: true,
+    saferEnvironment: true
+  });
+  const invalidWarningSigns = await put('/me/safety-plan', {
+    warningSigns: 'yes',
+    internalCoping: true,
+    safePeoplePlaces: false,
+    trustedContact: true,
+    professionalHelp: false,
+    saferEnvironment: true
+  });
+
+  assert.equal(valid.statusCode, 200);
+  assert.equal(valid.json().safePeoplePlaces, false);
+  assert.equal(missingProfessionalHelp.statusCode, 400);
+  assert.equal(invalidWarningSigns.statusCode, 400);
 });

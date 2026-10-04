@@ -20,10 +20,12 @@ export async function registerSafetyPlanRoutes(server: FastifyInstance) {
     const body = asBody(request.body);
     const record = await getDataStore().saveSafetyPlan({
       userId: user.id,
-      safePlace: requireBoolean(body, 'safePlace'),
-      canContact: requireBoolean(body, 'canContact'),
+      warningSigns: requireBoolean(body, 'warningSigns'),
+      internalCoping: requireBoolean(body, 'internalCoping'),
+      safePeoplePlaces: requireBoolean(body, 'safePeoplePlaces'),
       trustedContact: requireBoolean(body, 'trustedContact'),
-      urgentHelp: requireBoolean(body, 'urgentHelp'),
+      professionalHelp: requireBoolean(body, 'professionalHelp'),
+      saferEnvironment: requireBoolean(body, 'saferEnvironment'),
       updatedAt: new Date().toISOString()
     });
     return record;

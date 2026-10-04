@@ -96,10 +96,12 @@ test('users cannot read or update another user singleton resources', async () =>
     scope: 'backend_sync'
   });
   await injectAs('user-b', 'PUT', '/me/safety-plan', {
-    safePlace: true,
-    canContact: true,
+    warningSigns: true,
+    internalCoping: true,
+    safePeoplePlaces: true,
     trustedContact: true,
-    urgentHelp: false
+    professionalHelp: true,
+    saferEnvironment: false
   });
   await injectAs('user-b', 'PUT', '/me/trusted-contact', {
     name: 'Persona de confianza',
@@ -113,6 +115,9 @@ test('users cannot read or update another user singleton resources', async () =>
   const ownerTrustedContact = await injectAs('user-b', 'GET', '/me/trusted-contact');
 
   assert.equal(ownerSafetyPlan.statusCode, 200);
+  assert.equal(ownerSafetyPlan.json().warningSigns, true);
+  assert.equal(ownerSafetyPlan.json().professionalHelp, true);
+  assert.equal(ownerSafetyPlan.json().saferEnvironment, false);
   assert.equal(ownerTrustedContact.statusCode, 200);
   assert.equal(ownerTrustedContact.json().phoneE164, '+528009112000');
 });
