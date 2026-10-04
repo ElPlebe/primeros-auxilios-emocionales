@@ -13,6 +13,7 @@ test('Auth0 callback route exists and completes the mobile redirect flow', () =>
   const notFoundRoute = readFileSync(path.join(rootDir, 'app', '+not-found.tsx'), 'utf8');
 
   assert.match(callbackRoute, /useLocalSearchParams/);
+  assert.match(callbackRoute, /makeRedirectUri/);
   assert.match(callbackRoute, /getPendingAuth0Request/);
   assert.match(callbackRoute, /exchangeCodeAsync/);
   assert.match(callbackRoute, /router\.replace\(['"]\/account['"]\)/);
@@ -20,6 +21,8 @@ test('Auth0 callback route exists and completes the mobile redirect flow', () =>
 
   assert.match(accountScreen, /savePendingAuth0Request/);
   assert.match(accountScreen, /request\.codeVerifier/);
+  assert.match(accountScreen, /makeRedirectUri/);
+  assert.match(accountScreen, /Redirect URI actual/);
 
   assert.match(nativeIntent, /redirectSystemPath/);
   assert.match(nativeIntent, /normalizeAuthCallbackPath/);

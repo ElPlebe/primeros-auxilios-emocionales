@@ -68,3 +68,16 @@ test('normalizes Auth0 domain and issuer when env values include protocol or mis
   assert.equal(config.domain, 'example.us.auth0.com');
   assert.equal(config.issuer, 'https://example.us.auth0.com/');
 });
+
+test('allows runtime redirect URI to override local env values for Expo Go', () => {
+  const { buildAuth0Config } = compileAuth0Config();
+
+  const config = buildAuth0Config(
+    {
+      EXPO_PUBLIC_AUTH0_REDIRECT_URI: 'primerosauxiliosemocionales:///auth'
+    },
+    'exp://192.168.68.53:8081/--/auth'
+  );
+
+  assert.equal(config.redirectUri, 'exp://192.168.68.53:8081/--/auth');
+});

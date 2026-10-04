@@ -1,4 +1,4 @@
-import { exchangeCodeAsync, ResponseType, useAuthRequest } from 'expo-auth-session';
+import { exchangeCodeAsync, makeRedirectUri, ResponseType, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -26,7 +26,17 @@ const ACCOUNT_STATUS_ITEMS = [
 ];
 
 export default function AccountScreen() {
-  const auth0Config = useMemo(() => buildAuth0Config(), []);
+  const auth0Config = useMemo(
+    () =>
+      buildAuth0Config(
+        undefined,
+        makeRedirectUri({
+          path: 'auth',
+          scheme: 'primerosauxiliosemocionales'
+        })
+      ),
+    []
+  );
   const [hasToken, setHasToken] = useState(false);
   const [isAuthBusy, setIsAuthBusy] = useState(false);
   const [pendingRecords, setPendingRecords] = useState(0);
@@ -170,6 +180,10 @@ export default function AccountScreen() {
             - {item}
           </Text>
         ))}
+        <Text style={styles.redirectLabel}>Redirect URI actual</Text>
+        <Text selectable style={styles.redirectValue}>
+          {auth0Config.redirectUri}
+        </Text>
       </View>
 
       <View style={styles.card}>
@@ -271,6 +285,19 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     fontSize: 15,
     lineHeight: 23
+  },
+  redirectLabel: {
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    marginTop: 12
+  },
+  redirectValue: {
+    color: COLORS.textMuted,
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4
   },
   syncButton: {
     marginBottom: SIZES.base

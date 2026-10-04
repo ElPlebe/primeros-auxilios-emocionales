@@ -24,12 +24,12 @@ export interface Auth0Config {
   redirectUri: string;
 }
 
-export function buildAuth0Config(env: Auth0Env = getRuntimeEnv()): Auth0Config {
+export function buildAuth0Config(env: Auth0Env = getRuntimeEnv(), redirectUriOverride?: string): Auth0Config {
   const domain = normalizeDomain(env.EXPO_PUBLIC_AUTH0_DOMAIN ?? AUTH0_DEFAULTS.domain);
   const issuer = `https://${domain}/`;
   const audience = env.EXPO_PUBLIC_AUTH0_AUDIENCE ?? AUTH0_DEFAULTS.audience;
   const clientId = env.EXPO_PUBLIC_AUTH0_CLIENT_ID ?? AUTH0_DEFAULTS.clientId;
-  const redirectUri = env.EXPO_PUBLIC_AUTH0_REDIRECT_URI ?? AUTH0_DEFAULTS.redirectUri;
+  const redirectUri = redirectUriOverride ?? env.EXPO_PUBLIC_AUTH0_REDIRECT_URI ?? AUTH0_DEFAULTS.redirectUri;
 
   return {
     audience,

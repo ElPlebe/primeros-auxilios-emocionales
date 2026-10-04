@@ -1,4 +1,4 @@
-import { exchangeCodeAsync } from 'expo-auth-session';
+import { exchangeCodeAsync, makeRedirectUri } from 'expo-auth-session';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
@@ -21,7 +21,17 @@ function getSingleParam(value: string | string[] | undefined) {
 export default function AuthCallbackScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const auth0Config = useMemo(() => buildAuth0Config(), []);
+  const auth0Config = useMemo(
+    () =>
+      buildAuth0Config(
+        undefined,
+        makeRedirectUri({
+          path: 'auth',
+          scheme: 'primerosauxiliosemocionales'
+        })
+      ),
+    []
+  );
   const [message, setMessage] = useState('Completando inicio de sesion...');
   const [canContinue, setCanContinue] = useState(false);
 
