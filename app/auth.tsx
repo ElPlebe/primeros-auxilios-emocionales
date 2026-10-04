@@ -18,6 +18,11 @@ function getSingleParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function formatAuth0ErrorMessage(error: string, description?: string) {
+  const detail = description ? `\n\nDetalle: ${description}` : '';
+  return `Auth0 devolvio un error: ${error}.${detail}`;
+}
+
 export default function AuthCallbackScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -40,9 +45,10 @@ export default function AuthCallbackScreen() {
       const code = getSingleParam(params.code);
       const callbackState = getSingleParam(params.state);
       const error = getSingleParam(params.error);
+      const errorDescription = getSingleParam(params.error_description);
 
       if (error) {
-        setMessage('Auth0 cancelo o rechazo el inicio de sesion.');
+        setMessage(formatAuth0ErrorMessage(error, errorDescription));
         setCanContinue(true);
         return;
       }
@@ -93,7 +99,7 @@ export default function AuthCallbackScreen() {
     };
 
     completeLogin();
-  }, [auth0Config, params.code, params.error, params.state, router]);
+  }, [auth0Config, params.code, params.error, params.error_description, params.state, router]);
 
   return (
     <View style={styles.container}>

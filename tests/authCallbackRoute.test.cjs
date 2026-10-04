@@ -14,6 +14,8 @@ test('Auth0 callback route exists and completes the mobile redirect flow', () =>
 
   assert.match(callbackRoute, /useLocalSearchParams/);
   assert.match(callbackRoute, /makeRedirectUri/);
+  assert.match(callbackRoute, /error_description/);
+  assert.match(callbackRoute, /formatAuth0ErrorMessage/);
   assert.match(callbackRoute, /getPendingAuth0Request/);
   assert.match(callbackRoute, /exchangeCodeAsync/);
   assert.match(callbackRoute, /router\.replace\(['"]\/account['"]\)/);
