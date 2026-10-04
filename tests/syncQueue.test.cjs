@@ -71,6 +71,27 @@ test('sync without an access token is skipped without mutating records', async (
   assert.equal(queueRecord.status, 'pending');
 });
 
+test('sync sends backend consent before sensitive records', async () => {
+  const { createSyncQueueRecord, syncPendingRecords } = compileSyncQueue();
+  const assessment = createSyncQueueRecord('assessment', { distressBefore: 4 }, 'client-assessment');
+  const consent = createSyncQueueRecord(
+    'consent',
+    { version: '2026-10-02-mx-local-sync-readiness', scope: 'backend_sync' },
+    'client-consent'
+  );
+  const sentRecordTypes = [];
+
+  const result = await syncPendingRecords([assessment, consent], {
+    getAccessToken: async () => 'token',
+    sendRecord: async (record) => {
+      sentRecordTypes.push(record.recordType);
+    }
+  });
+
+  assert.equal(result, 'synced');
+  assert.deepEqual(sentRecordTypes, ['consent', 'assessment']);
+});
+
 test('dispatches queued records to the matching API client method', async () => {
   const { createSyncQueueRecord, sendQueuedRecord } = compileSyncQueue();
   const calls = [];
@@ -97,7 +118,21 @@ test('dispatches queued records to the matching API client method', async () => 
     apiClient
   );
   await sendQueuedRecord(createSyncQueueRecord('emotion_log', { date: '2026-10-03', emotion: 'Calma' }, 'client-5'), apiClient);
-  await sendQueuedRecord(createSyncQueueRecord('safety_plan', { safePlace: true }, 'client-6'), apiClient);
+  await sendQueuedRecord(
+    createSyncQueueRecord(
+      'safety_plan',
+      {
+        warningSigns: true,
+        internalCoping: true,
+        safePeoplePlaces: true,
+        trustedContact: true,
+        professionalHelp: true,
+        saferEnvironment: false
+      },
+      'client-6'
+    ),
+    apiClient
+  );
   await sendQueuedRecord(createSyncQueueRecord('trusted_contact', { phoneE164: '+528009112000' }, 'client-7'), apiClient);
   await sendQueuedRecord(createSyncQueueRecord('trusted_contact', { deleted: true }, 'client-8'), apiClient);
   await sendQueuedRecord(createSyncQueueRecord('consent', { scope: 'backend_sync' }, 'client-9'), apiClient);
@@ -109,7 +144,18 @@ test('dispatches queued records to the matching API client method', async () => 
     ['custom-exercise', { title: 'Respirar', steps: ['Inhala'], clientId: 'client-12' }],
     ['follow', { exerciseId: 'grounding', distressBefore: 5, clientId: 'client-4' }],
     ['emotion', { logDate: '2026-10-03', emotion: 'Calma', clientId: 'client-5' }],
-    ['safety', { safePlace: true, clientId: 'client-6' }],
+    [
+      'safety',
+      {
+        warningSigns: true,
+        internalCoping: true,
+        safePeoplePlaces: true,
+        trustedContact: true,
+        professionalHelp: true,
+        saferEnvironment: false,
+        clientId: 'client-6'
+      }
+    ],
     ['contact', { phoneE164: '+528009112000', clientId: 'client-7' }],
     ['contact-delete'],
     ['consent', { scope: 'backend_sync', clientId: 'client-9' }],

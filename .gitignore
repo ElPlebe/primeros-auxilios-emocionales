@@ -43,6 +43,8 @@ backend/.env.*
 *.tsbuildinfo
 .assessment-test-dist/
 .local-json-test-dist/
+.storage-consent-test-dist/
+.sync-service-test-dist/
 .crisis-routing-test-dist/
 .phone-test-dist/
 .consent-test-dist/

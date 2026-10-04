@@ -21,7 +21,12 @@ const SAFETY_PLAN_STATUS_KEY = 'safetyPlanStatus';
 const SYNC_QUEUE_KEY = 'syncQueue';
 
 export const acceptConsent = async () => {
-  await AsyncStorage.setItem(CONSENT_ACCEPTED_KEY, JSON.stringify(createConsentRecord()));
+  const consent = createConsentRecord();
+  await AsyncStorage.setItem(CONSENT_ACCEPTED_KEY, JSON.stringify(consent));
+  await queueSyncRecord('consent', {
+    scope: 'backend_sync',
+    version: consent.version
+  });
 };
 
 export const getConsentAcceptedAt = async () => AsyncStorage.getItem(CONSENT_ACCEPTED_KEY);

@@ -128,7 +128,9 @@ export async function sendQueuedRecord(record: SyncQueueRecord, apiClient: SyncA
 }
 
 export async function syncPendingRecords(queue: SyncQueueRecord[], dependencies: SyncDependencies): Promise<SyncResult> {
-  const pending = queue.filter((record) => record.status === 'pending' || record.status === 'failed');
+  const pending = queue
+    .filter((record) => record.status === 'pending' || record.status === 'failed')
+    .sort((left, right) => getSyncPriority(left) - getSyncPriority(right));
   if (pending.length === 0) {
     return 'skipped_empty';
   }
@@ -156,4 +158,8 @@ export async function syncPendingRecords(queue: SyncQueueRecord[], dependencies:
   }
 
   return failed ? 'failed' : 'synced';
+}
+
+function getSyncPriority(record: SyncQueueRecord) {
+  return record.recordType === 'consent' ? 0 : 1;
 }

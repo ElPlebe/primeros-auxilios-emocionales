@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import 'dotenv/config';
 import Fastify from 'fastify';
 import { type AppEnv, readEnv } from './config/env.js';
 import { registerAssessmentRoutes } from './modules/assessments/assessments.routes.js';
