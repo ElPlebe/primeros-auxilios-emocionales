@@ -9,6 +9,7 @@ const rootDir = path.resolve(__dirname, '..');
 test('Auth0 callback route exists and completes the mobile redirect flow', () => {
   const callbackRoute = readFileSync(path.join(rootDir, 'app', 'auth.tsx'), 'utf8');
   const accountScreen = readFileSync(path.join(rootDir, 'app', 'account', 'index.tsx'), 'utf8');
+  const nativeIntent = readFileSync(path.join(rootDir, 'app', '+native-intent.tsx'), 'utf8');
 
   assert.match(callbackRoute, /useLocalSearchParams/);
   assert.match(callbackRoute, /getPendingAuth0Request/);
@@ -18,4 +19,9 @@ test('Auth0 callback route exists and completes the mobile redirect flow', () =>
 
   assert.match(accountScreen, /savePendingAuth0Request/);
   assert.match(accountScreen, /request\.codeVerifier/);
+
+  assert.match(nativeIntent, /redirectSystemPath/);
+  assert.match(nativeIntent, /normalizeAuthCallbackPath/);
+  assert.match(nativeIntent, /\/auth/);
+  assert.match(nativeIntent, /URLSearchParams/);
 });
