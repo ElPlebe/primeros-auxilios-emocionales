@@ -105,7 +105,7 @@ Auth0 configurado para esta rama:
 - Domain: `dev-hqmwn1jxx5kcopc4.us.auth0.com`
 - Mobile Client ID: `bnx3HhBHBp0Jk0nzbZUrzamcWFnibVkh`
 - API audience/identifier: `https://primeros-auxilios-emocionales-api`
-- Redirect/logout URI: `primerosauxiliosemocionales://auth`
+- Redirect/logout URI: `primerosauxiliosemocionales:///auth`
 - Backend issuer: `https://dev-hqmwn1jxx5kcopc4.us.auth0.com/`
 - Backend JWKS: `https://dev-hqmwn1jxx5kcopc4.us.auth0.com/.well-known/jwks.json`
 

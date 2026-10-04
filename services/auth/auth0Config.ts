@@ -2,7 +2,7 @@ export const AUTH0_DEFAULTS = {
   audience: 'https://primeros-auxilios-emocionales-api',
   clientId: 'bnx3HhBHBp0Jk0nzbZUrzamcWFnibVkh',
   domain: 'dev-hqmwn1jxx5kcopc4.us.auth0.com',
-  redirectUri: 'primerosauxiliosemocionales://auth'
+  redirectUri: 'primerosauxiliosemocionales:///auth'
 };
 
 type Auth0Env = Partial<Record<string, string | undefined>>;

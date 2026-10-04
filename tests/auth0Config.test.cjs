@@ -40,7 +40,7 @@ test('builds Auth0 mobile and backend configuration from the project defaults', 
   assert.equal(AUTH0_DEFAULTS.domain, 'dev-hqmwn1jxx5kcopc4.us.auth0.com');
   assert.equal(config.clientId, 'bnx3HhBHBp0Jk0nzbZUrzamcWFnibVkh');
   assert.equal(config.audience, 'https://primeros-auxilios-emocionales-api');
-  assert.equal(config.redirectUri, 'primerosauxiliosemocionales://auth');
+  assert.equal(config.redirectUri, 'primerosauxiliosemocionales:///auth');
   assert.equal(config.issuer, 'https://dev-hqmwn1jxx5kcopc4.us.auth0.com/');
   assert.equal(config.discovery.issuer, config.issuer);
   assert.equal(config.discovery.authorizationEndpoint, 'https://dev-hqmwn1jxx5kcopc4.us.auth0.com/authorize');

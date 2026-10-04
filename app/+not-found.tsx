@@ -1,10 +1,32 @@
-import { Link, Stack } from 'expo-router';
+import * as Linking from 'expo-linking';
+import { Link, Stack, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { normalizeAuthCallbackPath } from './+native-intent';
 
 export default function NotFoundScreen() {
+  const router = useRouter();
+
+  useEffect(() => {
+    Linking.getInitialURL()
+      .then((initialUrl) => {
+        if (!initialUrl) {
+          return;
+        }
+
+        const authRoute = normalizeAuthCallbackPath(initialUrl);
+        if (authRoute.startsWith('/auth')) {
+          router.replace(authRoute as never);
+        }
+      })
+      .catch(() => {
+        // Keep the not-found screen visible if the incoming URL cannot be read.
+      });
+  }, [router]);
+
   return (
     <>
       <Stack.Screen options={{ title: 'Pantalla no encontrada' }} />
