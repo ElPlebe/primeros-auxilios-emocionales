@@ -8,17 +8,18 @@ import { acceptConsent } from '../../utils/storage';
 export default function ConsentScreen() {
   const router = useRouter();
 
-  const handleAccept = async () => {
+  const handleAccept = async (nextRoute: '/' | '/account') => {
     await acceptConsent();
-    router.replace('/');
+    router.replace(nextRoute);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.kicker}>Bienvenida/o</Text>
-      <Text style={styles.title}>Antes de usar la app</Text>
+      <Text style={styles.kicker}>Primeros Auxilios Emocionales</Text>
+      <Text style={styles.title}>Antes de empezar</Text>
       <Text style={styles.subtitle}>
-        Queremos que uses esta herramienta con claridad, cuidado y expectativas realistas.
+        Puedes usar ayuda urgente y ejercicios sin cuenta. Si inicias sesión con Google, la app podrá guardar tu progreso
+        y sincronizarlo cuando aceptes compartir esos datos.
       </Text>
 
       <View style={styles.card}>
@@ -31,17 +32,24 @@ export default function ConsentScreen() {
       </View>
 
       <PrimaryButton
-        title="Acepto y continuar"
-        onPress={handleAccept}
-        style={styles.primaryButton}
-        accessibilityHint="Acepta el aviso de alcance y abre el inicio de la aplicación."
-      />
-      <PrimaryButton
         title="Necesito ayuda urgente"
         onPress={() => router.replace('/crisis')}
         variant="danger"
         style={styles.urgentButton}
         accessibilityHint="Abre opciones de emergencia y apoyo inmediato."
+      />
+      <PrimaryButton
+        title="Iniciar sesión con Google"
+        onPress={() => handleAccept('/account')}
+        style={styles.primaryButton}
+        accessibilityHint="Acepta el aviso inicial y abre el inicio de sesión para guardar tu progreso."
+      />
+      <PrimaryButton
+        title="Continuar sin cuenta"
+        onPress={() => handleAccept('/')}
+        variant="secondary"
+        style={styles.secondaryButton}
+        accessibilityHint="Acepta el aviso inicial y usa la app guardando datos solo en este dispositivo."
       />
       <PrimaryButton
         title="Ver privacidad y datos"

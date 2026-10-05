@@ -41,6 +41,8 @@ backend/.env.*
 
 # typescript
 *.tsbuildinfo
+.*test-dist/
+.*-test-dist/
 .assessment-test-dist/
 .auth0-config-test-dist/
 .local-json-test-dist/

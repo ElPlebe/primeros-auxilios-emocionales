@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Alert, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { isResearchToolsEnabled } from '../../features/access/featureFlags';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
 import { buildWellnessDataExport, buildWellnessSummary, WellnessData, WellnessSummary } from '../../utils/wellnessReport';
 import { clearWellnessHistory, getStoredWellnessData } from '../../utils/storage';
@@ -97,6 +98,17 @@ export default function PrivacyDataScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>Permisos y consentimientos</Text>
+        <Text style={styles.rowText}>
+          La app no necesita permisos especiales para crisis, ejercicios, autoevaluaciones ni registros locales.
+        </Text>
+        <Text style={styles.rowText}>
+          Si más adelante activas recordatorios, contactos del dispositivo o participación en investigación, se pedirá
+          permiso por separado antes de usar esas funciones.
+        </Text>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Datos guardados</Text>
         <View style={styles.metricsGrid}>
           <MetricCard label="emociones" value={summary.totalEmotionLogs} />
@@ -123,12 +135,14 @@ export default function PrivacyDataScreen() {
         </View>
       )}
 
-      <PrimaryButton
-        title="Ver resumen para tesis/clínica"
-        onPress={() => router.push('../summary')}
-        style={styles.primaryButton}
-        accessibilityHint="Abre un resumen con indicadores de seguimiento para revisión académica."
-      />
+      {isResearchToolsEnabled && (
+        <PrimaryButton
+          title="Ver resumen para tesis/clínica"
+          onPress={() => router.push('../summary')}
+          style={styles.primaryButton}
+          accessibilityHint="Abre un resumen con indicadores de seguimiento para revisión académica."
+        />
+      )}
       <PrimaryButton
         title="Exportar datos"
         onPress={exportData}
@@ -137,11 +151,11 @@ export default function PrivacyDataScreen() {
         accessibilityHint="Abre las opciones para compartir una exportación de tus datos locales."
       />
       <PrimaryButton
-        title="Cuenta y sincronización"
+        title="Guardar mi progreso con Google"
         onPress={() => router.push('/account')}
         variant="secondary"
         style={styles.secondaryButton}
-        accessibilityHint="Abre el estado de cuenta y sincronización futura."
+        accessibilityHint="Abre el inicio de sesión para guardar tu progreso."
       />
       <PrimaryButton
         title="Borrar historial"

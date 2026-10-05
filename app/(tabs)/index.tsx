@@ -8,6 +8,7 @@ import { getEmotionDisplayLabel, getEmotionValue } from '../../utils/emotionScal
 import { parseJsonArray } from '../../utils/localJson';
 import { HOME_DISCLAIMER } from '../../utils/psychoeducation';
 import { hasAcceptedConsent } from '../../utils/storage';
+import { getAccessToken } from '../../services/auth/secureTokenStore';
 
 type StoredEmotionLog = { date: string; emotion: string };
 
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const [avgEmotion, setAvgEmotion] = useState<number | null>(null);
   const [showAlert, setShowAlert] = useState(false);
   const [lastEmotion, setLastEmotion] = useState<string | null>(null);
+  const [hasAccountSession, setHasAccountSession] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -38,6 +40,9 @@ export default function HomeScreen() {
         router.replace('../consent');
         return;
       }
+
+      const token = await getAccessToken();
+      setHasAccountSession(Boolean(token));
 
       const stored = await AsyncStorage.getItem('emotionHistory');
       const history = parseJsonArray<StoredEmotionLog>(stored);
@@ -77,6 +82,24 @@ export default function HomeScreen() {
         style={styles.urgentButton}
         accessibilityHint="Abre opciones para llamar a emergencias o buscar apoyo inmediato."
       />
+
+      <View style={styles.accountPrompt}>
+        <Text style={styles.accountPromptTitle}>
+          {hasAccountSession ? 'Progreso guardado con tu cuenta' : 'Guarda tu progreso de forma privada'}
+        </Text>
+        <Text style={styles.accountPromptText}>
+          {hasAccountSession
+            ? 'Puedes revisar tu cuenta, cerrar sesión o reintentar guardar registros pendientes.'
+            : 'Inicia sesión con Google cuando quieras conservar tu historial y sincronizarlo. También puedes seguir sin cuenta.'}
+        </Text>
+        <PrimaryButton
+          title={hasAccountSession ? 'Ver mi cuenta' : 'Guardar mi progreso con Google'}
+          onPress={() => router.push('/account')}
+          variant={hasAccountSession ? 'secondary' : undefined}
+          style={styles.accountPromptButton}
+          accessibilityHint="Abre la pantalla de cuenta para iniciar sesión con Google o revisar el guardado de progreso."
+        />
+      </View>
 
       <PrimaryButton
         title="Realizar autoevaluación"
@@ -139,13 +162,6 @@ export default function HomeScreen() {
 
       <Text style={styles.sectionTitle}>Más opciones</Text>
       <PrimaryButton
-        title="Cuenta y sincronización"
-        onPress={() => router.push('/account')}
-        variant="secondary"
-        style={styles.tertiaryAction}
-        accessibilityHint="Abre el inicio de sesión con Auth0 y el estado de sincronización."
-      />
-      <PrimaryButton
         title="Plan de seguridad breve"
         onPress={() => router.push('../safety-plan')}
         variant="secondary"
@@ -161,12 +177,6 @@ export default function HomeScreen() {
       <PrimaryButton
         title="Privacidad y datos"
         onPress={() => router.push('../privacy-data')}
-        variant="ghost"
-        style={styles.tertiaryAction}
-      />
-      <PrimaryButton
-        title="Resumen para tesis/clínica"
-        onPress={() => router.push('../summary')}
         variant="ghost"
         style={styles.tertiaryAction}
       />
@@ -230,6 +240,30 @@ const styles = StyleSheet.create({
   primaryAction: {
     backgroundColor: COLORS.primary,
     marginBottom: SIZES.padding
+  },
+  accountPrompt: {
+    backgroundColor: '#EAF6FF',
+    borderColor: '#B9DCF8',
+    borderRadius: SIZES.radius,
+    borderWidth: 1,
+    marginBottom: SIZES.padding,
+    padding: 16
+  },
+  accountPromptTitle: {
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
+    fontSize: 17,
+    marginBottom: 6
+  },
+  accountPromptText: {
+    color: COLORS.textMuted,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 12
+  },
+  accountPromptButton: {
+    marginBottom: 0
   },
   lastEmotionBox: {
     backgroundColor: '#EAF6FF',

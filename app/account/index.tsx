@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import PrimaryButton from '../../components/PrimaryButton';
 import { COLORS, FONTS, SIZES } from '../../constants/theme';
+import { isDeveloperDiagnosticsEnabled } from '../../features/access/featureFlags';
 import { CONSENT_COPY } from '../../features/privacy/consentContent';
 import { buildAuth0Config } from '../../services/auth/auth0Config';
 import {
@@ -19,10 +20,10 @@ WebBrowser.maybeCompleteAuthSession();
 
 const ACCOUNT_STATUS_ITEMS = [
   'La app funciona localmente sin cuenta.',
-  'El inicio de sesion usa Auth0 Universal Login con PKCE.',
-  'La sincronizacion reintenta pendientes si existe API configurada, token valido y consentimiento.',
-  'Los tokens se guardan fuera de AsyncStorage.',
-  'El modo crisis y los recursos de Mexico seguiran disponibles sin iniciar sesion.'
+  'Google se usa solo para identificar tu cuenta y guardar tu progreso si lo decides.',
+  'La sincronizacion reintenta pendientes cuando hay sesion, API configurada y consentimiento.',
+  'La informacion de sesion se guarda en el almacenamiento seguro del dispositivo.',
+  'El modo crisis y los recursos de Mexico siguen disponibles sin iniciar sesion.'
 ];
 
 export default function AccountScreen() {
@@ -168,9 +169,10 @@ export default function AccountScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.kicker}>Cuenta</Text>
-      <Text style={styles.title}>Cuenta y sincronizacion</Text>
+      <Text style={styles.title}>Guardar mi progreso</Text>
       <Text style={styles.subtitle}>
-        Inicia sesion con Auth0 para habilitar sincronizacion remota. El modo crisis sigue disponible sin cuenta.
+        Inicia sesion con Google para guardar tu historial y sincronizarlo cuando exista conexion con el backend. El
+        modo crisis sigue disponible sin cuenta.
       </Text>
 
       <View style={styles.statusCard}>
@@ -180,10 +182,14 @@ export default function AccountScreen() {
             - {item}
           </Text>
         ))}
-        <Text style={styles.redirectLabel}>Redirect URI actual</Text>
-        <Text selectable style={styles.redirectValue}>
-          {auth0Config.redirectUri}
-        </Text>
+        {isDeveloperDiagnosticsEnabled && (
+          <>
+            <Text style={styles.redirectLabel}>Redirect URI actual</Text>
+            <Text selectable style={styles.redirectValue}>
+              {auth0Config.redirectUri}
+            </Text>
+          </>
+        )}
       </View>
 
       <View style={styles.card}>
@@ -202,7 +208,7 @@ export default function AccountScreen() {
       </View>
 
       <PrimaryButton
-        title="Intentar sincronizar pendientes"
+        title="Guardar registros pendientes"
         onPress={retrySync}
         disabled={!hasToken || pendingRecords === 0}
         style={styles.syncButton}
@@ -218,7 +224,7 @@ export default function AccountScreen() {
         />
       ) : (
         <PrimaryButton
-          title="Iniciar sesion con Auth0"
+          title="Iniciar sesión con Google"
           onPress={login}
           disabled={!request || isAuthBusy}
           accessibilityHint="Abre Auth0 para iniciar sesion y habilitar sincronizacion."
