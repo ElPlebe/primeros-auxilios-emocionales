@@ -24,7 +24,7 @@ test('Auth0 callback route exists and completes the mobile redirect flow', () =>
   assert.match(accountScreen, /savePendingAuth0Request/);
   assert.match(accountScreen, /request\.codeVerifier/);
   assert.match(accountScreen, /makeRedirectUri/);
-  assert.match(accountScreen, /Redirect URI actual/);
+  assert.match(accountScreen, /URL para Auth0 en desarrollo/);
 
   assert.match(nativeIntent, /redirectSystemPath/);
   assert.match(nativeIntent, /normalizeAuthCallbackPath/);

@@ -183,12 +183,16 @@ export default function AccountScreen() {
           </Text>
         ))}
         {isDeveloperDiagnosticsEnabled && (
-          <>
-            <Text style={styles.redirectLabel}>Redirect URI actual</Text>
+          <View style={styles.diagnosticBox}>
+            <Text style={styles.redirectLabel}>URL para Auth0 en desarrollo</Text>
             <Text selectable style={styles.redirectValue}>
               {auth0Config.redirectUri}
             </Text>
-          </>
+            <Text style={styles.redirectHelp}>
+              Si ves el error Callback URL mismatch, copia esta URL en Auth0, dentro de Allowed Callback URLs y
+              Allowed Logout URLs de la app mobile. En Expo Go puede cambiar si cambia la IP, el puerto o la red.
+            </Text>
+          </View>
         )}
       </View>
 
@@ -296,7 +300,7 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontFamily: FONTS.bold,
     fontSize: 14,
-    marginTop: 12
+    marginBottom: 4
   },
   redirectValue: {
     color: COLORS.textMuted,
@@ -304,6 +308,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     marginTop: 4
+  },
+  diagnosticBox: {
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
+    borderRadius: SIZES.radius,
+    borderWidth: 1,
+    marginTop: 14,
+    padding: 12
+  },
+  redirectHelp: {
+    color: COLORS.textMuted,
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8
   },
   syncButton: {
     marginBottom: SIZES.base
