@@ -5,6 +5,15 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*', '.expo/*', '.*test-dist/*', '.*-test-dist/*'],
+    ignores: [
+      'dist/*',
+      '.expo/*',
+      '.*test-dist/*',
+      '.*-test-dist/*',
+      '.codex-build/*',
+      '.codex-finalizer/*',
+      '.codex-output/*',
+      '.codex-sdk58-web/*',
+    ],
   },
 ]);

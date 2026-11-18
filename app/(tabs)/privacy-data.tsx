@@ -31,16 +31,27 @@ export default function PrivacyDataScreen() {
   const [data, setData] = useState<WellnessData>(EMPTY_DATA);
   const [summary, setSummary] = useState<WellnessSummary>(() => buildWellnessSummary(EMPTY_DATA));
 
-  const loadData = async () => {
-    const stored = await getStoredWellnessData();
-    setData(stored);
-    setSummary(buildWellnessSummary(stored));
-  };
-
   useEffect(() => {
-    loadData().catch(() => {
-      Alert.alert('No se pudieron cargar los datos', 'Intenta abrir esta pantalla nuevamente.');
-    });
+    let isActive = true;
+
+    const loadData = async () => {
+      try {
+        const stored = await getStoredWellnessData();
+        if (!isActive) return;
+        setData(stored);
+        setSummary(buildWellnessSummary(stored));
+      } catch {
+        if (isActive) {
+          Alert.alert('No se pudieron cargar los datos', 'Intenta abrir esta pantalla nuevamente.');
+        }
+      }
+    };
+
+    void loadData();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const exportData = async () => {

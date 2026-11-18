@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -133,8 +133,6 @@ export default function ExerciseDetailScreen() {
   const router = useRouter();
   const [completed, setCompleted] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [distressBeforeValue, setDistressBeforeValue] = useState<number | null>(() =>
     normalizeDistressValue(firstParam(distressBefore))
@@ -144,6 +142,10 @@ export default function ExerciseDetailScreen() {
   const [helpfulComment, setHelpfulComment] = useState('');
 
   const exerciseId = firstParam(id);
+  const audioSource = isExerciseId(exerciseId) ? audioForExercise[exerciseId] ?? null : null;
+  const audioPlayer = useAudioPlayer(audioSource);
+  const audioStatus = useAudioPlayerStatus(audioPlayer);
+  const isAudioPlaying = audioStatus.playing;
   const content = isExerciseId(exerciseId) ? EXERCISE_CATALOG[exerciseId] : null;
   const assessmentLevelParam = firstParam(assessmentLevel);
   const normalizedAssessmentLevel = assessmentLevelParam ? normalizeDistressLevel(assessmentLevelParam) : undefined;
@@ -160,22 +162,8 @@ export default function ExerciseDetailScreen() {
 
   const playAudio = async () => {
     try {
-      if (isExerciseId(exerciseId) && audioForExercise[exerciseId]) {
-        if (sound) {
-          await sound.playAsync();
-          setIsAudioPlaying(true);
-          return;
-        }
-
-        const { sound: createdSound } = await Audio.Sound.createAsync(audioForExercise[exerciseId]);
-        createdSound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded) {
-            setIsAudioPlaying(status.isPlaying);
-          }
-        });
-        setSound(createdSound);
-        await createdSound.playAsync();
-        setIsAudioPlaying(true);
+      if (audioSource) {
+        audioPlayer.play();
       } else {
         Alert.alert('Audio no disponible', 'Este ejercicio no tiene audio asociado.');
       }
@@ -184,28 +172,20 @@ export default function ExerciseDetailScreen() {
     }
   };
 
-  const pauseAudio = async () => {
-    if (!sound) return;
-    await sound.pauseAsync();
-    setIsAudioPlaying(false);
+  const pauseAudio = () => {
+    if (!audioSource) return;
+    audioPlayer.pause();
   };
 
   const stopAudio = async () => {
-    if (!sound) return;
-    await sound.stopAsync();
-    setIsAudioPlaying(false);
+    if (!audioSource) return;
+    audioPlayer.pause();
+    await audioPlayer.seekTo(0);
   };
 
   useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [sound]);
-
-  useEffect(() => {
-    setCurrentStepIndex(0);
+    const resetTimer = setTimeout(() => setCurrentStepIndex(0), 0);
+    return () => clearTimeout(resetTimer);
   }, [exerciseId]);
 
   if (!content || !isExerciseId(exerciseId)) {
@@ -298,7 +278,7 @@ export default function ExerciseDetailScreen() {
                 <PrimaryButton
                   title="Pausar audio"
                   onPress={pauseAudio}
-                  disabled={!sound || !isAudioPlaying}
+                  disabled={!isAudioPlaying}
                   variant="secondary"
                   style={styles.audioButton}
                   accessibilityHint="Pausa la guía auditiva."
@@ -306,7 +286,7 @@ export default function ExerciseDetailScreen() {
                 <PrimaryButton
                   title="Detener audio"
                   onPress={stopAudio}
-                  disabled={!sound}
+                  disabled={!isAudioPlaying && audioStatus.currentTime === 0}
                   variant="ghost"
                   style={styles.audioButton}
                   accessibilityHint="Detiene la guía auditiva y vuelve al inicio del audio."

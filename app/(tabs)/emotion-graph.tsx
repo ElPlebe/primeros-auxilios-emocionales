@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   ScrollView,
@@ -26,7 +26,6 @@ import {
 
 export default function EmotionGraphScreen() {
   const [history, setHistory] = useState<EmotionLog[]>([]);
-  const [filtered, setFiltered] = useState<EmotionLog[]>([]);
   const [filter, setFilter] = useState<'week' | 'month'>('week');
   const router = useRouter();
 
@@ -39,11 +38,11 @@ export default function EmotionGraphScreen() {
     loadData();
   }, []);
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const today = new Date();
     const limit = new Date();
     limit.setDate(today.getDate() - (filter === 'week' ? 7 : 30));
-    setFiltered(history.filter((item) => new Date(item.date) >= limit));
+    return history.filter((item) => new Date(item.date) >= limit);
   }, [history, filter]);
 
   const getStats = () => {

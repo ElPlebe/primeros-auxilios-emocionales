@@ -231,7 +231,6 @@ Antes de publicar:
 - Politica de privacidad revisada legalmente.
 - QA en dispositivo fisico Android.
 - Revision de iOS si se publica en App Store.
-- Migrar `expo-av` a `expo-audio` antes de actualizar a Expo SDK 54.
 
 ## Fuentes Base
 

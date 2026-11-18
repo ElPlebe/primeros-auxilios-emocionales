@@ -63,10 +63,13 @@ export default function AccountScreen() {
   };
 
   useEffect(() => {
-    refreshStatus()
-      .catch(() => {
+    const refreshTimer = setTimeout(() => {
+      refreshStatus().catch(() => {
         Alert.alert('No se pudo leer el estado de sincronizacion', 'Intenta abrir esta pantalla nuevamente.');
       });
+    }, 0);
+
+    return () => clearTimeout(refreshTimer);
   }, []);
 
   useEffect(() => {
